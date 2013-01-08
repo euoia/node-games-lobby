@@ -1,0 +1,111 @@
+// http://www.colourlovers.com/palette/880334/She_is_a_Green_Gem
+@topColor: #008417; // Emerald Green
+@leftColor: #F4FFCC; // Sprint comes
+@rightColor: #37C94A; // Peridot Gem
+@bottomColor: #01A163; // Green Garnet
+@contentHeadColor: #EF3E1F; // Coke Time RC145
+@contentColor: #3BD3EB; // Aquamarine Sparke
+@contentFootColor: #524543; // mud
+
+@headerHeight: 100px;
+@leftSidebarWidth: 200px;
+@rightSidebarWidth: 200px;
+
+@contentHeadHeight: 80px;
+@contentFootHeight: 50px;
+
+// 3-column layout.
+// jpickard.
+// $Id: $
+// --------------------------------------------------
+html,body {
+	color:#112;
+	padding:20px;
+	font:14px "Lucida Grande",Helvetica,Arial,sans-serif;
+}
+
+#layout, #header, #main, #left-sidebar, #right, #right-sidebar, #content, #content-head, #content-foot, #content-body {
+	position: absolute;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+#layout {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+#header {
+	background-color: @topColor;
+	top: 0;
+	right: 0;
+	height: @headerHeight;
+	left: 0;
+}
+
+#main {
+	top: @headerHeight;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+#left-sidebar {
+	background-color: @leftColor;
+	top: 0;
+	width: @leftSidebarWidth;
+	bottom: 0;
+	left: 0;
+}
+
+#right {
+	background-color: @rightColor;
+	top: 0;
+	width: @rightSidebarWidth;
+	right: 0;
+	bottom: 0;
+}
+
+
+#right-sidebar {
+	top: 0;
+	width: @rightSidebarWidth;
+	right: 0;
+	bottom: 0;
+}
+
+#content {
+	background-color: @bottomColor;
+	top: 0;
+	bottom: 0;
+	left: @leftSidebarWidth;
+	right: @rightSidebarWidth;
+}
+
+	#content-head {
+		background-color: @contentHeadColor;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: @contentHeadHeight;
+	}
+
+	#content-body {
+		background-color: @contentColor;
+		top: @contentHeadHeight;
+		bottom: 0px;
+		left: 0;
+		right: 0;
+	}
+
+	#content-foot {
+		background-color: @contentFootColor;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: @contentFootHeight;
+	}

@@ -1,0 +1,89 @@
+html,
+body {
+  color: #112;
+  padding: 20px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+#layout,
+#header,
+#main,
+#left-sidebar,
+#right,
+#right-sidebar,
+#content,
+#content-head,
+#content-foot,
+#content-body {
+  position: absolute;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+#layout {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+#header {
+  background-color: #008417;
+  top: 0;
+  right: 0;
+  height: 100px;
+  left: 0;
+}
+#main {
+  top: 100px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+#left-sidebar {
+  background-color: #f4ffcc;
+  top: 0;
+  width: 200px;
+  bottom: 0;
+  left: 0;
+}
+#right {
+  background-color: #37c94a;
+  top: 0;
+  width: 200px;
+  right: 0;
+  bottom: 0;
+}
+#right-sidebar {
+  top: 0;
+  width: 200px;
+  right: 0;
+  bottom: 0;
+}
+#content {
+  background-color: #01a163;
+  top: 0;
+  bottom: 0;
+  left: 200px;
+  right: 200px;
+}
+#content-head {
+  background-color: #ef3e1f;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+}
+#content-body {
+  background-color: #3bd3eb;
+  top: 80px;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+}
+#content-foot {
+  background-color: #524543;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+}
