@@ -5,65 +5,76 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
 		<script src="/javascripts/socket.io.js"></script>
 		<script src="/javascripts/jquery-1.8.3.min.js"></script>
-		
-		<script>
-            var roomName = 'default';
-            var chat = null;
-            
-            var login = function () {
-                this.username = $('#usernameInput').val();
 
-                $.post("/login/doLogin",
-                    {username: this.username },
-                    function (data) {
-                        if (data.result !== 'ok') {
-                            $('#enterUsernameErrorBox').html(
-                                "<span class='text-error'>" + data.message + "</span>");
-                            return false;
-                        }
-                        
-                        chat = new Chat(username, roomName);
-                        chat.showChat();
-                    }
-                );
-                
-                return false;
-            };
-            
+		<script>
+			var chat = null;
+
+			var login = function () {
+				var username = $('#usernameInput').val(),
+					roomName = $('#roomName').val();
+
+				$.post("/login/doLogin",
+					{username: username },
+					function (data) {
+						if (data.result !== 'ok') {
+							$('#enterUsernameErrorBox').html(
+								"<span class='text-error'>" + data.message + "</span>");
+							return false;
+						}
+
+						chat = new Chat(username, roomName);
+						chat.showChat();
+					}
+				);
+
+				return false;
+			};
+
 			var Chat = function (username, roomName) {
 				this.username = username;
-                this.roomName = roomName;
+				this.roomName = roomName;
 				this.socket = null;
-                
-                thisChat = this;
-                
-                this.showChat = function () {
-                    $('.login').hide();
-                    $('.chatting').show();
-                    $('#message-entry').focus();
-                    
-                    var socket =  io.connect('http://localhost');
-                    thisChat.socket = socket;
-                    
-                    socket.on('connect', function() {
-                        socket.emit('subscribe', {room: thisChat.roomName});
-                    });
-                    
-                    thisChat.socket.on('message', function(data) {
-                        console.log('message', data);
-                        thisChat.addMessage(data.time, data.username, data.message);
-                    });
-                };
-				
-				this.sendMessage = function () {
-					var message = $('#message-entry').val();
-					this.socket.emit('message', { message : message });
-					this.addMessage(Date.now(), this.username, message); 
-					$('#message-entry').val('');
-					
-					return false;
+
+				thisChat = this;
+
+				this.showChat = function () {
+					$('.login').hide();
+					$('.chatting').show();
+					$('.user-input').focus();
+
+					var socket =  io.connect('http://localhost');
+					thisChat.socket = socket;
+
+					socket.on('connect', function() {
+						socket.emit('subscribe', {room: thisChat.roomName});
+					});
+
+					socket.on('message', function(data) {
+						console.log('message', data);
+						thisChat.addMessage(data.time, data.username, data.message);
+					});
+
+					socket.on('userList', function(data) {
+						console.log('Received userList: ' + data.users);
+
+						$('#left-sidebar').html(
+							'<h3>' + thisChat.roomName + '<h3>' +
+							'<ul>');
+
+						for (i in data.users) {
+							$('#left-sidebar').append('<li>' + data.users[i] + '</li>');
+						}
+
+						$('#left-sidebar').append('</ul>');
+					});
 				};
-				
+
+				this.sendMessage = function (message) {
+					this.socket.emit('message', { message: message, room: thisChat.roomName });
+
+					this.addMessage(Date.now(), this.username, message);
+				};
+
 				this.addMessage = function (time, username, message) {
 					$('#chat-room .chat-box ul').append(
 						"<li class='message'>" +
@@ -71,98 +82,140 @@
 							"<span class='username'>" + username + ": </span>" +
 							"<span class='message'>" + message + "</span>" +
 						"</li>");
+
+					this.scrollDown();
 				};
-				
+
+				// TODO: Move this into utils.
 				this.formatDate = function (dateStr) {
 					var d = new Date(dateStr);
 
 					return this.formatNumberLength(d.getHours(), 2) +
-						":" + this.formatNumberLength(d.getMinutes(), 2) +
-						":" + this.formatNumberLength(d.getSeconds(), 2);
+						":" + this.formatNumberLength(d.getMinutes(), 2);
 				};
-				
+
+				// TODO: Move this into utils.
 				this.formatNumberLength = function(num, length) {
-                    var r = "" + num;
-                    while (r.length < length) {
-                        r = "0" + r;
-                    }
-                    return r;
+						var r = "" + num;
+						while (r.length < length) {
+							r = "0" + r;
+						}
+
+						return r;
 				};
+
+				this.scrollDown = function () {
+					console.log('scrolldown');
+					//used to keep the most recent messages visible
+					$('#content-body').animate({scrollTop: 9999}, 400);
+
+					//clear the animation otherwise the user cannot scroll back up.
+					setTimeout( function clearAnimate () {
+						$('#content-body').animate({}, 1);
+					});
+				}
 			};
-            
-            $(document).ready(function () {
-                $('#usernameInput').select()
-            });
+
+			$(document).ready(function () {
+					$('#usernameInput').select()
+			});
+
+			var input = function (domObj) {
+				var input = $(domObj).children('.user-input');
+				var message = $(input).val();
+				$(input).val('');
+
+				if (message.charAt(0) === '/') {
+					// A command!
+					var command = message.substr(1);
+					switch (command) {
+						case 'userList':
+							chat.socket.emit('userList', {room: chat.roomName});
+							break;
+						default:
+							chat.addMessage(Date.now(), 'admin', 'Not a valid command');
+					}
+
+				} else {
+					chat.sendMessage(message);
+				}
+
+				return false;
+			};
 		</script>
-		
+
 		<style type="text/css">
 			.chatting {
 				display: none;
 			}
 		</style>
-			
-		
+
+
 		<!-- This uses the express middleware
 		<link rel="stylesheet" type="text/css" href="/less/layout.css" />
 		<link rel="stylesheet" type="text/css" href="/less/chat.css" />
 		<link rel="stylesheet" type="text/css" href="/less/bootstrap/bootstrap.css" />
 			-->
-		
+
 		<!-- This uses livereload -->
+		<link rel="stylesheet" type="text/css" href="/less/bootstrap/bootstrap.css" />
 		<link rel="stylesheet" type="text/css" href="/stylesheets/layout.css" />
 		<link rel="stylesheet" type="text/css" href="/stylesheets/chat.css" />
-		<link rel="stylesheet" type="text/css" href="/less/bootstrap/bootstrap.css" />
-		
+
   </head>
   <body>
-		
+
 		<div id="layout">
 			<div id="header"></div>
-			
+
 			<div id="main">
 				<div id="left-sidebar"></div>
 				<div id="right">
 						<div id="right-sidebar"></div>
 				</div>
-				
+
 				<div id="content">
 					<div id="content-head">
 						<h1><%= title %></h1>
 						<p>Welcome to <%= title %></p>
 					</div>
-					
+
+					<!-- ----- CONTENT ----- -->
 					<div id="content-body">
-						<!-- messages are hidden to begin with -->
+
+						<!-- Hidden: Login -->
 						<div id="chat-room" class="chatting">
-							<div class="chat-box"><ul></ul></div>
+							<div class="chat-box">
+								<ul></ul><!-- messages go in here -->
+							</div>
 						</div>
-						
-						<!-- shown to begin with -->
+
+						<!-- Shown: Login -->
 						<div class="login">
 							<form id="enterUsername" onSubmit="return login()">
 								<div id="enterUsernameBox">
 									<div class="question">Enter your username:</span>
 									<input type="text" id="usernameInput" />
+									<input type="text" id="roomName" value="default" />
 									<input type="submit" class="btn btn-primary" />
 								</div>
-                                <div id="enterUsernameErrorBox"></div>
-							</form>
-						</div>
-						
-					</div>
-					
-					<div id="content-foot">
-						<div class="chatting">
-							<form onSubmit="return chat.sendMessage()">
-								<input type="text" name="message" id="message-entry" autocomplete="off"/>
-								<input type="submit" id="message-entry-submit" />
+								<div id="enterUsernameErrorBox">&nbsp;</div>
 							</form>
 						</div>
 					</div>
-					
-				</div> <!-- content -->
+				</div> <!-- ~~~~~ CONTENT ~~~~~ -->
+
+				<div id="content-foot">
+					<div class="chatting">
+						<form onSubmit="return input(this)">
+							<input type="text" class="user-input" autocomplete="off"/>
+							<input type="submit" id="message-entry-submit" />
+						</form>
+					</div>
+				</div>
+
 			</div> <!-- main -->
 		</div> <!-- layout -->
-		
+
   </body>
 </html>
