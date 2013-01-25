@@ -5,7 +5,6 @@
 var express = require('express'),
   routes = require('./routes'),
   login = require('./routes/login'),
-  user = require('./routes/user'),
   http = require('http'),
   path = require('path'),
   lessMiddleware = require('less-middleware'),
@@ -47,7 +46,6 @@ app.configure('development', function() {
 });
 
 app.get('/', routes.index);
-app.get('/users', user.list);
 app.post('/login/doLogin', login.doLogin);
 
 var server = http.createServer(app).listen(app.get('port'), function() {
