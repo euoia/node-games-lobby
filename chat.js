@@ -68,20 +68,18 @@ module.exports = function(server, sessionStore, cookieParser) {
 			});
 		});
 
+		// Note that this event is fired before the socket is removed from the room
+		// list.
 		socket.on('disconnect', function() {
 			console.log(session.username + ' disconnected.');
 
-			// TODO: Only broadcast to rooms associated with socket.
-			// TODO: Find out how to get the room names associated with a socket.
-			// TODO: It seems like this event is fired before the user is removed
-			// from the room so simply sending userList will not work.
-
-
+			// TODO: Is there a way to get rooms without accessing a private member (socket.manager)?
 			var room = null,
-					socketRoomName = null,
-					timesInRoom = 0,
+				socketRoomName = null,
+				timesInRoom = 0,
 				rooms = socket.manager.roomClients[socket.id];
-				usernamesInRoom = null;
+
+			usernamesInRoom = null;
 
 			for (socketRoomName in rooms) {
 				// Strip the socket.io leading '/'.
