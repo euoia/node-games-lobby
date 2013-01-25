@@ -1,5 +1,5 @@
 // Tightly coupled to the HTML.
-// Required chat.js.
+// Requires chat.js.
 
 function Login() {
 };
@@ -12,13 +12,14 @@ Login.prototype.loginFailure = function () {
 };
 
 
-Login.prototype.loginSuccess = function () {
-	var username = $('#usernameInput').val(),
-		roomName = $('#roomName').val();
+Login.prototype.loginSuccess = function (username, rooms) {
+	if (rooms === undefined) {
+		rooms = ['default'];
+	}
 
 	chat = new Chat({
 		username:          username,
-		roomName:          roomName,
+		roomName:          rooms,
 		userListDiv:       '#left-sidebar',
 		messagesUl:        '#chat-room .chat-box ul',
 		messageScroll:     '#content-body',
@@ -31,16 +32,22 @@ Login.prototype.loginSuccess = function () {
 	$('.user-input').focus();
 };
 
-Login.doLogin = function () {
+Login.prototype.doLogin = function () {
+	var username = $('#usernameInput').val(),
+		roomName = $('#roomName').val(),
+		$this = this;
+
+	alert('doLogin');
+
 	$.post(
 		"/login/doLogin",
 		{ username: username },
 		function(data) {
 			if (data.result !== 'ok') {
-				return loginFailure();
+				return $this.loginFailure();
 			}
 
-			loginSuccess();
+			$this.loginSuccess(username, [roomName]);
 		}
 	);
 

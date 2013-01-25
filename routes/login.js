@@ -8,9 +8,10 @@ exports.doLogin = function(req, res){
 	}
 };
 
+// TODO: add rooms
 exports.checkSession = function(req, res) {
 	if (req.session.username !== undefined) {
-		res.send({result: 'ok'});
+		res.send({result: 'ok', username: req.session.username});
 	} else {
 		res.send({result: 'fail'});
 	}
