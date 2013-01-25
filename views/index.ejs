@@ -6,6 +6,7 @@
 		<script src="/javascripts/socket.io.js"></script>
 		<script src="/javascripts/jquery-1.8.3.min.js"></script>
 		<script src="/javascripts/chat.js"></script>
+		<script src="/javascripts/login.js"></script>
 
 		<style type="text/css">
 			.chatting {
@@ -14,45 +15,24 @@
 		</style>
 
 		<script type="text/javascript">
-			var chat = null;
+
+			var chat = null,
+				login = new Login;
 
 			$(document).ready(function() {
 				$('#usernameInput').select()
-				$('#login').submit(login);
-			});
+				$('#login').submit(login.doLogin);
 
-			var login = function() {
-				var username = $('#usernameInput').val(),
-					roomName = $('#roomName').val();
-
-				$.post("/login/doLogin", {
-						username: username
-					},
-
+				// See if the user already has a session.
+				$.post("/login/checkSession",
+					{},
 					function(data) {
-						if (data.result !== 'ok') {
-							$('#enterUsernameErrorBox').html(
-								"<span class='text-error'>" + data.message + "</span>");
-							return false;
+						if (data.result === 'ok') {
+							login.loginSuccess();
 						}
-
-						chat = new Chat({
-							username:          username,
-							roomName:          roomName,
-							userListDiv:       '#left-sidebar',
-							messagesUl:        '#chat-room .chat-box ul',
-							messageScroll:     '#content-body',
-							messageEntryForm:  '#message-entry-form',
-							messageEntry:      '#message-entry'
-						});
-
-						$('.login').hide();
-						$('.chatting').show();
-						$('.user-input').focus();
-					});
-
-				return false;
-			};
+					}
+				);
+			});
 		</script>
 
 		<!-- This uses the express middleware
