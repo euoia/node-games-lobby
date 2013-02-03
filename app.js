@@ -46,11 +46,17 @@ app.configure('development', function() {
 });
 
 app.get('/', routes.index);
-app.post('/login/doLogin', login.doLogin);
-app.post('/login/checkSession', login.checkSession);
+
+// All routes in login are hooked up.
+for (route in login) {
+	app.post('/login/' + route, login[route]);
+}
 
 var server = http.createServer(app).listen(app.get('port'), function() {
   console.log("Express server listening on port " + app.get('port'));
 });
 
-var chat = require('./chat')(server, sessionStore, cookieParser);
+var Chat = require('./chat'),
+	chat = null;
+
+chat = new Chat (server, sessionStore, cookieParser);

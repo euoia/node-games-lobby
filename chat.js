@@ -3,11 +3,18 @@ var sio = require('socket.io'),
 	parseCookie = require('connect').utils.parseCookie,
 	_ = require('underscore');
 
-module.exports = function(server, sessionStore, cookieParser) {
-	var io = sio.listen(server),
-		sessionSockets = new SessionSockets(io, sessionStore, cookieParser);
 
-	sessionSockets.on('connection', function(err, socket, session) {
+Chat = function(server, sessionStore, cookieParser) {
+	this.io = sio.listen(server);
+	this.sessionSockets = new SessionSockets(this.io, sessionStore, cookieParser),
+
+	this.setupListeners();
+}
+
+Chat.prototype.setupListeners = function() {
+	var $this = this;
+
+	this.sessionSockets.on('connection', function(err, socket, session) {
 		if (err) {
 			throw err;
 		}
@@ -15,19 +22,27 @@ module.exports = function(server, sessionStore, cookieParser) {
 		socket.username = session.username;
 
 		socket.on('subscribe', function(data) {
-			console.log(session.username + ' joined ' + data.room);
+			console.log('subscribe');
+			console.log(data);
+			if (data.roomName === undefined) {
+				console.log(session.username + ' tried to subscribe but did not specify a room name so it is being discarded.');
+				return;
+			}
 
-			var usernamesInRoomBeforeJoining = _.pluck(io.sockets.clients(data.room), 'username');
+			console.log(session.username + ' joined ' + data.roomName);
+
+			var usernamesInRoomBeforeJoining = _.pluck($this.io.sockets.clients(data.roomName), 'username');
 
 			// Add the socket to the room. A player may have multiple tabs open.
-			socket.join(data.room);
+			socket.join(data.roomName);
 
-			var usernamesInRoomAfterJoining = _.pluck(io.sockets.clients(data.room), 'username');
+			var usernamesInRoomAfterJoining = _.pluck($this.io.sockets.clients(data.roomName), 'username');
 
 			// Send the user list to the socket.
 			// A user may have multiple sockets open so we need the unique list of usernames.
 			socket.emit('userList', {
-				users: _.uniq(usernamesInRoomAfterJoining)
+				users: _.uniq(usernamesInRoomAfterJoining),
+				roomName: data.roomName
 			});
 
 			// If already present, the socket needs to join, but do not notify the room.
@@ -35,36 +50,46 @@ module.exports = function(server, sessionStore, cookieParser) {
 				socket.emit('message', {
 					time: Date.now(),
 					username: 'admin',
-					message: 'You have rejoined ' + data.room + '.'
+					roomName: data.roomName,
+					message: 'You have rejoined ' + data.roomName + '.'
 				});
 
 			} else {
 				socket.emit('message', {
 					time: Date.now(),
 					username: 'admin',
-					message: 'You have joined ' + data.room + '.'
+					roomName: data.roomName,
+					message: 'You have joined ' + data.roomName + '.'
 				});
 
-				socket.broadcast.to(data.room).emit('message', {
+				socket.broadcast.to(data.roomName).emit('message', {
 					time: Date.now(),
 					username: 'admin',
-					message: session.username + ' has joined ' + data.room + '.'
+					roomName: data.roomName,
+					message: session.username + ' has joined ' + data.roomName + '.'
 				});
 
-				socket.broadcast.to(data.room).emit('userList', {
+				socket.broadcast.to(data.roomName).emit('userList', {
 					users: _.uniq(usernamesInRoomAfterJoining)
 				});
 			}
 		});
 
 		socket.on('unsubscribe', function(data) {
-			console.log(session.username + ' unsubscribed ' + data.room);
-			socket.leave(data.room);
+			if (data.roomName === undefined) {
+				console.log(session.username + ' tried to unsubscribe but did not specify a roomName so the request is being discarded');
+				console.log(data);
+				return;
+			}
 
-			socket.broadcast.to(data.room).emit('message', {
+			console.log(session.username + ' unsubscribed ' + data.roomName);
+			socket.leave(data.roomName);
+
+			socket.broadcast.to(data.roomName).emit('message', {
 				time: Date.now(),
 				username: 'admin',
-				message: session.username + ' has unsubscribed ' + data.room + '.'
+				roomName: data.roomName,
+				message: session.username + ' has unsubscribed ' + data.roomName + '.'
 			});
 		});
 
@@ -85,7 +110,7 @@ module.exports = function(server, sessionStore, cookieParser) {
 				// Strip the socket.io leading '/'.
 				room = socketRoomName.substr(1);
 
-				usernamesInRoom = _.pluck(io.sockets.clients(room), 'username');
+				usernamesInRoom = _.pluck($this.io.sockets.clients(room), 'username');
 				usernamesInRoomAfterLeaving = _.without(usernamesInRoom, socket.username);
 
 				timesInRoom = usernamesInRoom.length - usernamesInRoomAfterLeaving.length;
@@ -96,20 +121,24 @@ module.exports = function(server, sessionStore, cookieParser) {
 					socket.broadcast.to(room).emit('message', {
 						time: Date.now(),
 						username: 'admin',
-						message: session.username + ' has disconnected.'
+						roomName: room,
+						message: session.username + ' has disconnected from ' + room + '.'
 					});
 
-					socket.broadcast.to(room).emit('userList', {
-						users: _.uniq(usernamesInRoomAfterLeaving)
-					});
+					console.log('$this:');
+					console.log($this);
+					$this.sendUserList(socket, room, _.uniq(usernamesInRoomAfterLeaving));
 				}
 			}
 		});
 
 		socket.on('message', function(data) {
+			console.log('message');
+			console.log(data);
+
 			// TODO: This kind of checking and logging is probably OTT. We could have some kind of separate validation module.
-			if (data.room === undefined) {
-				console.log(session.username + ' sent a message but did not specify a room so it is being discarded.');
+			if (data.roomName === undefined) {
+				console.log(session.username + ' sent a message but did not specify a room name so it is being discarded.');
 				console.log(data);
 				return;
 			}
@@ -120,25 +149,39 @@ module.exports = function(server, sessionStore, cookieParser) {
 				return;
 			}
 
-			console.log(session.username + ' sent a message:' + data.message);
+			console.log(session.username + ' sent a message:');
+			console.log(data);
 
-			//socket.broadcast.emit('message'
-			socket.broadcast.emit('message', {
+			socket.broadcast.to(data.roomName).emit('message', {
 				time: Date.now(),
 				username: session.username,
+				roomName: data.roomName,
 				message: data.message
 			});
 		});
 
 		socket.on('userList', function(data) {
+			if (data.roomName === undefined) {
+				console.log(session.username + ' requested userList but did not specify a room name so it is being discarded.');
+				console.log(data);
+				return;
+			}
 			console.log(session.username + ' requested userList.');
 
-			var users = _.pluck(io.sockets.clients(data.room), 'username');
+			var users = _.pluck($this.io.sockets.clients(data.roomName), 'username');
 			console.log(users);
-			socket.emit('userList', {
-				users: users
-			});
+
+			this.sendUserList(socket, data.roomName, users);
 		});
 
 	});
 };
+
+Chat.prototype.sendUserList = function(socket, roomName, userList) {
+	socket.broadcast.to(roomName).emit('userList', {
+		roomName: roomName,
+		users: userList
+	});
+};
+
+module.exports = Chat;

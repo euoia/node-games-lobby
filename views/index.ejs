@@ -17,23 +17,16 @@
 
 		<script type="text/javascript">
 
-			var chat = null,
-				login = new Login;
+			var login = null;
 
 			$(document).ready(function() {
-				$('#usernameInput').select()
-				$('#login').submit(login.doLogin);
-
-				// See if the user already has a session.
-				$.post("/login/checkSession",
-					{},
-					function(data) {
-						if (data.result === 'ok') {
-							login.loginSuccess(data.username);
-						}
-					}
-				);
+				login = new Login({
+					usernameInput: '#usernameInput',
+					loginForm: '#login',
+					logout: '#logout'
+				});
 			});
+
 		</script>
 
 		<!-- This uses the express middleware
@@ -55,14 +48,14 @@
 		<div id="main">
 			<div id="left-sidebar"></div>
 			<div id="right">
-					<div id="right-sidebar"></div>
+				<div id="right-sidebar"></div>
 			</div>
 
 			<!-- ----- CONTENT ----- -->
 			<div id="content">
 				<div id="content-head">
 					<h1><%= title %></h1>
-					<p>Welcome to <%= title %></p>
+					<p>Welcome to <%= title %>&nbsp;<a id="logout" class="chatting" href="#">log out</a></p>
 				</div>
 
 				<div id="content-body">
