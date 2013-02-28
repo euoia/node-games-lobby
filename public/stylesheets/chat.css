@@ -12,6 +12,9 @@ input.user-input[type="text"] {
 .messages {
   height: inherit;
 }
+.message {
+  color: #f8fce7;
+}
 #content-body {
   overflow-y: auto;
 }
@@ -24,7 +27,15 @@ input.user-input[type="text"] {
   padding: 0;
   padding-left: 10px;
 }
-.chat-box .username {
+.username {
   font-weight: bold;
-  color: darkgreen;
+  color: #fa1b70;
+}
+.roomName {
+  margin-top: 15px;
+  color: inherit;
+}
+#roomUserList {
+  list-style: none;
+  margin: 0;
 }

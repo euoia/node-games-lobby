@@ -1,5 +1,11 @@
 // chat.less
 // --------------------------------------------------
+
+// Colours
+@usernameColor:       #FA1B70; // Magenta.
+@messageColor:        #F8FCE7; // Metal Mouth.
+@roomNameColor:       inherit;
+
 input.user-input[type="text"] {
 	vertical-align: top;
 	width: 100%;
@@ -17,6 +23,10 @@ input.user-input[type="text"] {
     height: inherit;
 }
 
+.message {
+	color: @messageColor;
+}
+
 #content-body {
 	overflow-y: auto;
 }
@@ -32,7 +42,17 @@ input.user-input[type="text"] {
     padding-left: 10px;
 }
 
-.chat-box .username {
+.username {
     font-weight: bold;
-    color: darkgreen;
+    color: @usernameColor;
+}
+
+.roomName {
+	margin-top: 15px;
+	color: @roomNameColor;
+}
+
+#roomUserList {
+	list-style: none;
+	margin: 0;
 }

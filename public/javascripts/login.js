@@ -33,10 +33,13 @@ function Login(options) {
 	});
 }
 
-Login.prototype.loginFailure = function(message) {
+Login.prototype.addError = function(message) {
 	$('#enterUsernameErrorBox').html(
 		"<span class='text-error'>" + message + "</span>");
+};
 
+Login.prototype.loginFailure = function(message) {
+	this.addError(message);
 	return false;
 };
 
@@ -45,7 +48,9 @@ Login.prototype.loginSuccess = function(username, roomName) {
 	var $this = this;
 
 	if (roomName === undefined) {
-		roomName = 'default';
+		this.addError('Cannot join a room without specifying a name.');
+		// TODO: Fix the server so that it returns the room name when rejoining.
+		return false;
 	}
 
 	if (this.chat === null) {

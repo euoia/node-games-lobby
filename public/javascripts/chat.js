@@ -83,15 +83,17 @@ Chat.prototype.listen = function() {
 };
 
 Chat.prototype.updateUserList = function(users) {
-	this.userListDiv.html(
-		'<h3>' + this.roomName + '<h3>' +
-		'<ul>');
+	var userListContent;
+
+	$('<div class="roomName">' + this.roomName + ' users</div>')
+		.appendTo(this.userListDiv);
+
+	$('<ul id="roomUserList" />').appendTo(this.userListDiv);
+
 
 	for (i in users) {
-		this.userListDiv.append('<li>' + users[i] + '</li>');
+		$('<li class="username">' + users[i] + '</li>').appendTo('#roomUserList');
 	}
-
-	this.userListDiv.append('</ul>');
 };
 
 Chat.prototype.sendMessage = function(message) {
