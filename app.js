@@ -9,7 +9,7 @@ var express = require('express'),
   path = require('path'),
   lessMiddleware = require('less-middleware'),
   RedisStore = require('connect-redis')(express),
-	Chat = require('node-iochat');
+	Chat = require('iochat');
 
 var secret = "put me in a config file";
 var app = express();
