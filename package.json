@@ -13,6 +13,6 @@
     "connect-redis": "~1.4.5",
     "session.socket.io": "git://github.com/euoia/session.socket.io#master",
     "underscore": "~1.4.3",
-    "node-iochat": "git://github.com/euoia/node-iochat#master"
+    "iochat": "git://github.com/euoia/node-iochat#master"
   }
 }
