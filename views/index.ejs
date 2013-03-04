@@ -3,31 +3,13 @@
 	<head>
 		<title><%= title %></title>
 		<link rel='stylesheet' href='/stylesheets/style.css' />
-		<script src="/javascripts/socket.io.js"></script>
-		<script src="/javascripts/jquery-1.8.3.min.js"></script>
-		<script src="/javascripts/chat.js"></script>
-		<script src="/javascripts/login.js"></script>
-		<script src="/javascripts/underscore.js"></script>
+		<script data-main="javascripts/app" src="javascripts/require.js"></script>
 
 		<style type="text/css">
 			.chatting {
 				display: none;
 			}
 		</style>
-
-		<script type="text/javascript">
-
-			var login = null;
-
-			$(document).ready(function() {
-				login = new Login({
-					usernameInput: '#usernameInput',
-					loginForm: '#login',
-					logout: '#logout'
-				});
-			});
-
-		</script>
 
 		<!-- This uses the express middleware
 		<link rel="stylesheet" type="text/css" href="/less/layout.css" />
@@ -55,7 +37,7 @@
 			<div id="content">
 				<div id="content-head">
 					<h1><%= title %></h1>
-					<p>Welcome to <%= title %>.&nbsp;<a id="logout" class="chatting" href="#"> log out</a></p>
+					<!--<p>Welcome to <%= title %>.&nbsp;<a id="logout" class="chatting" href="#"> log out</a></p>-->
 				</div>
 
 				<div id="content-body">

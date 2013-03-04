@@ -1,9 +1,15 @@
+var _ = require('underscore');
+
 // TODO: This should probably be called session.
 
 // AJAX login request.
 // TODO: DB Lookup.
+var valid_usernames = [
+	'james', 'bob'
+];
+
 exports.doLogin = function(req, res) {
-	if (req.body.username === 'james' || req.body.username === 'bob') {
+	if (_.contains(valid_usernames, req.body.username)) {
 		req.session.username = req.body.username;
 		res.send({
 			result: 'ok'

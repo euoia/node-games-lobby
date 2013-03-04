@@ -8,7 +8,8 @@ var express = require('express'),
   http = require('http'),
   path = require('path'),
   lessMiddleware = require('less-middleware'),
-  RedisStore = require('connect-redis')(express);
+  RedisStore = require('connect-redis')(express),
+	Chat = require('node-iochat');
 
 var secret = "put me in a config file";
 var app = express();
@@ -56,7 +57,4 @@ var server = http.createServer(app).listen(app.get('port'), function() {
   console.log("Express server listening on port " + app.get('port'));
 });
 
-var Chat = require('./chat'),
-	chat = null;
-
-chat = new Chat (server, sessionStore, cookieParser);
+new Chat (server, sessionStore, cookieParser);
