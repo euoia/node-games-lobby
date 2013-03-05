@@ -111,9 +111,9 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 	};
 
 	Login.prototype.logoutSuccess = function(username, rooms) {
-		$('.login').show();
-		$('.chatting').hide();
-		this.chat.destroy();
+		// This is probably the most secure way to ensure that nothing is left in
+		// the browser memory.
+		location.reload();
 	};
 
 	Login.prototype.doLogout = function() {
