@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app"
+    "start": "node app",
+		"postinstall" : "bower install"
   },
   "dependencies": {
     "express": "3.0.3",
@@ -15,7 +16,4 @@
     "underscore": "~1.4.3",
     "iochat": "git://github.com/euoia/node-iochat#master"
   },
-	"scripts" : {
-		"postinstall" : "bower install"
-	}
 }
