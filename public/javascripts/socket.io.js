@@ -1,1 +1,1 @@
-../../node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js
+../../components/socket.io/dist/socket.io.js

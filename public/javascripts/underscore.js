@@ -1,1 +1,1 @@
-../../node_modules/underscore/underscore.js
+../../components/underscore/underscore.js

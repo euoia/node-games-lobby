@@ -1,1 +1,1 @@
-../../node_modules/node-iochat/client/chat.js
+../../node_modules/iochat/client/chat.js
