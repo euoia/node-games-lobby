@@ -43,3 +43,7 @@ Thumbs.db
 # Node dependencies #
 ######################
 node_modules
+
+# Bower dependencies #
+######################
+components

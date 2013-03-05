@@ -1,0 +1,11 @@
+{
+  "name": "node-iochat-express",
+  "version": "0.0.0",
+  "dependencies": {
+    "jquery": "~1.9.1",
+    "socket.io": "~0.9.11",
+    "requirejs": "~2.1.5",
+    "underscore": "~1.4.4",
+    "node-iochat": "git://github.com/euoia/node-iochat.git"
+  }
+}
