@@ -15,5 +15,5 @@
     "session.socket.io": "git://github.com/euoia/session.socket.io#master",
     "underscore": "~1.4.3",
     "iochat": "git://github.com/euoia/node-iochat#master"
-  },
+  }
 }
