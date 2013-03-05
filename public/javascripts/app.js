@@ -9,11 +9,12 @@ requirejs.config({
 	}
 });
 
-require([
+define([
 		'jquery',
 		'login'
 	], function($, Login) {
-		var login = null;
+
+		var login;
 
 		$(document).ready(function() {
 			login = new Login({
@@ -22,4 +23,6 @@ require([
 				logout: '#logout'
 			});
 		});
+
+		return login;
 });

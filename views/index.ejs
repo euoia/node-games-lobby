@@ -6,6 +6,10 @@
 		<script data-main="javascripts/app" src="javascripts/require.js"></script>
 
 		<style type="text/css">
+			.login {
+				display: none;
+			}
+
 			.chatting {
 				display: none;
 			}
@@ -37,7 +41,8 @@
 			<div id="content">
 				<div id="content-head">
 					<h1><%= title %></h1>
-					<!--<p>Welcome to <%= title %>.&nbsp;<a id="logout" class="chatting" href="#"> log out</a></p>-->
+					<!--<p>Welcome to <%= title %>.&nbsp;-->
+					<a id="logout" class="chatting" href="#">log out</a></p>
 				</div>
 
 				<div id="content-body">

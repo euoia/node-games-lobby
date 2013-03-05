@@ -4,7 +4,7 @@
 
 var express = require('express'),
   routes = require('./routes'),
-  login = require('./routes/login'),
+  session = require('./routes/session'),
   http = require('http'),
   path = require('path'),
   lessMiddleware = require('less-middleware'),
@@ -49,8 +49,8 @@ app.configure('development', function() {
 app.get('/', routes.index);
 
 // All routes in login are hooked up.
-for (route in login) {
-	app.post('/login/' + route, login[route]);
+for (route in session) {
+	app.post('/session/' + route, session[route]);
 }
 
 var server = http.createServer(app).listen(app.get('port'), function() {

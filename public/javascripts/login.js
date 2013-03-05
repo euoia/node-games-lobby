@@ -1,5 +1,6 @@
 // Tightly coupled to the HTML.
 // Requires chat.js.
+// TODO: Rename this module to session.
 
 // Options:
 //   usernameInput
@@ -22,15 +23,22 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 		});
 
 		$(this.logout).click(function() {
-			$this.doLogout();
-
+			$this.logoutCmd();
 			return false;
 		});
 
 		// See if the user already has a session.
-		$.post("/login/checkSession", {}, function(data) {
+		$.post("/session/check", {}, function(data) {
 			if (data.result === 'ok') {
-				$this.loginSuccess(data.username);
+				console.log('already had a session');
+				console.log(data);
+				// The server supports multiple rooms but the client only supports a single room.
+				// TODO: Make this more general, instead of simply joining the first room.
+				$this.loginSuccess(data.username, data.rooms[0]);
+			} else {
+				console.log('no session - showing login');
+				$('.login').show();
+				$($this.usernameInput).focus();
 			}
 		});
 	}
@@ -50,6 +58,7 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 		var $this = this;
 
 		if (roomName === undefined) {
+			$('.login').show();
 			this.addError('Cannot join a room without specifying a name.');
 			// TODO: Fix the server so that it returns the room name when rejoining.
 			return false;
@@ -66,7 +75,8 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 				messageEntryForm: '#message-entry-form',
 				messageEntry: '#message-entry',
 				commands: {
-					'logout': this.logoutCmd.bind(this)
+					'logout': this.logoutCmd.bind(this),
+					'userList': this.refreshUserListCmd.bind(this)
 				}
 			});
 		}
@@ -83,11 +93,11 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 			roomName = $('#roomName').val(),
 			$this = this;
 
-		console.log('doLogin');
+		console.log('login');
 		console.log(this);
 
 		$.post(
-			"/login/doLogin", {
+			"/session/login", {
 			username: username
 		},
 
@@ -96,7 +106,7 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 				return $this.loginFailure(data.message);
 			}
 
-			$this.loginSuccess(username, [roomName]);
+			$this.loginSuccess(username, roomName);
 		});
 	};
 
@@ -107,10 +117,11 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 	};
 
 	Login.prototype.doLogout = function() {
+		console.log('Login logout');
 		var $this = this;
 
 		$.post(
-			"/login/doLogout", {},
+			"/session/logout", {},
 
 		function(data) {
 			// Assume success. Can't handle failure anyway.
@@ -120,7 +131,13 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 	};
 
 	Login.prototype.logoutCmd = function() {
+		console.log('logoutCmd');
+		this.chat.logout();
 		this.doLogout();
+	};
+
+	Login.prototype.refreshUserListCmd = function() {
+		this.chat.refreshUserList();
 	};
 
 	return Login;
