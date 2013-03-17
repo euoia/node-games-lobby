@@ -48,13 +48,23 @@ app.configure('development', function() {
 
 app.get('/', routes.index);
 
-// All routes in login are hooked up.
+// All routes in session are hooked up.
 for (route in session) {
 	app.post('/session/' + route, session[route]);
 }
 
+// Start the express server.
 var server = http.createServer(app).listen(app.get('port'), function() {
   console.log("Express server listening on port " + app.get('port'));
 });
 
-new Chat (server, sessionStore, cookieParser);
+// Create the chat server.
+var chat = new Chat (server, sessionStore, cookieParser);
+
+var games = [
+	'tictactoe'
+];
+
+var GameServer = require('./game_server');
+var gameServer = new GameServer(games, app, chat);
+
