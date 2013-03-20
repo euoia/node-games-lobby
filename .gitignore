@@ -46,7 +46,7 @@ node_modules
 
 # Bower dependencies #
 ######################
-node_modules
+components
 
 # Live reload Config #
 ######################
