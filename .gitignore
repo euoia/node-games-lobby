@@ -44,6 +44,10 @@ Thumbs.db
 ######################
 node_modules
 
-# Other #
+# Bower dependencies #
+######################
+node_modules
+
+# Live reload Config #
 ######################
 .livereload
