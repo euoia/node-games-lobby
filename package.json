@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node app",
-		"postinstall" : "bower install"
+    "postinstall": "bower install"
   },
   "dependencies": {
     "express": "3.0.3",
@@ -14,6 +14,7 @@
     "connect-redis": "~1.4.5",
     "session.socket.io": "git://github.com/functioncallback/session.socket.io.git",
     "underscore": "~1.4.3",
-    "iochat": "git://github.com/euoia/node-iochat#master"
+    "iochat": "git://github.com/euoia/node-iochat#master",
+    "uuid": "~1.4.1"
   }
 }

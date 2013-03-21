@@ -8,11 +8,12 @@
 //   logout
 
 define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
-	function Login(options) {
+	function Login(chat, options) {
 		var $this = this;
+		this.chat = chat;
 
-		this.chat = null;
-
+		// Add all options to this object.
+		// Perhaps it would be better to do this explicitly?
 		_.extend(this, options);
 
 		$(this.usernameInput).focus();
@@ -41,6 +42,9 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 				$($this.usernameInput).focus();
 			}
 		});
+
+		this.chat.addCommand('logout', this.logoutCmd.bind(this));
+		this.chat.addCommand('userList', this.refreshUserListCmd.bind(this));
 	}
 
 	Login.prototype.addError = function(message) {
@@ -64,25 +68,9 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 			return false;
 		}
 
-		if (this.chat === null) {
-			// Chat may not be null if we have already logged in.
-			this.chat = new Chat({
-				username: username,
-				roomName: roomName,
-				userListDiv: '#left-sidebar',
-				messagesUl: '#chat-room .chat-box ul',
-				messageScroll: '#content-body',
-				messageEntryForm: '#message-entry-form',
-				messageEntry: '#message-entry',
-				commands: {
-					'logout': this.logoutCmd.bind(this),
-					'userList': this.refreshUserListCmd.bind(this)
-				}
-			});
-		}
+		this.chat.connect(username, roomName);
 
-		this.chat.connect(roomName);
-
+		// TODO: Move these out of here into the app callback.
 		$('.login').hide();
 		$('.chatting').show();
 		$('.user-input').focus();
@@ -92,9 +80,6 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 		var username = $('#usernameInput').val(),
 			roomName = $('#roomName').val(),
 			$this = this;
-
-		console.log('login');
-		console.log(this);
 
 		$.post(
 			"/session/login", {
@@ -131,7 +116,6 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
 	};
 
 	Login.prototype.logoutCmd = function() {
-		console.log('logoutCmd');
 		this.chat.logout();
 		this.doLogout();
 	};
