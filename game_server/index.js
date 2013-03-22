@@ -37,6 +37,7 @@
 // TODO: Since we are adding socket events with chat.addSocketEvent we could
 //       proxy that in order to log any incoming socket events before they are
 //       passed on.
+// TODO: Handle cancellations if a player leaves or tries to start another game.
 
 var uuid = require ('uuid'),
 	_ = require ('underscore'),
@@ -67,7 +68,7 @@ function GameServer (games, app, chat) {
 	chat.addSocketEvent('listGames', this.listGames.bind(this));
 	chat.addSocketEvent('listLiveGames', this.listLiveGames.bind(this));
 
-	chat.addSocketEvent('startGame', this.startGame.bind(this));
+	chat.addSocketEvent('createGame', this.createGame.bind(this));
 }
 
 // ----------------------
@@ -92,7 +93,7 @@ GameServer.prototype.liveGame = function(gameUuid) {
 // ----------------------
 
 // Start a game. The game will be created in a WAITING state.
-GameServer.prototype.startGame = function(socket, session, data) {
+GameServer.prototype.createGame = function(socket, session, data) {
 	var gameUuid;
 
 	if (_.has(this.games, data.game) === false) {
@@ -120,7 +121,7 @@ GameServer.prototype.listGames = function(socket, session, data) {
 	this.chat.sendNotification(
 		socket,
 		util.format('The following games are available: %s. ' +
-			'To start a game send /startGame <game name>.', this.getAvailableGames().join(', ')),
+			'To start a game send /createGame <game name>.', this.getAvailableGames().join(', ')),
 		data.roomName);
 };
 
@@ -135,7 +136,7 @@ GameServer.prototype.listLiveGames = function(socket, session, data) {
 	console.log(util.inspect(this.liveGames));
 
 	if (liveGames.length === 0) {
-		msg = 'There are no live games at the moment. Why don\'t you start one using /startGame?';
+		msg = 'There are no live games at the moment. Why don\'t you start one using /createGame?';
 	} else {
 		liveGames.forEach(function (game) {
 			games.push(util.format('%s by %s', game.gameType, game.owner));

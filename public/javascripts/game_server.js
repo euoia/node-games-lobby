@@ -8,19 +8,19 @@ define([], function() {
 
 		chat.addCommand('listGames', function() { chat.emit('listGames') });
 		chat.addCommand('listLiveGames', function() { chat.emit('listLiveGames') });
-		chat.addCommand('startGame', this.startGame.bind(this));
+		chat.addCommand('createGame', this.createGame.bind(this));
 	}
 
 	// ----------------------
 	// Commands.
 	// ----------------------
-	GameServer.prototype.startGame = function(gameName) {
+	GameServer.prototype.createGame = function(gameName) {
 		if (gameName === undefined) {
 			this.chat.addNotification(Date.now(), 'Must specify a game name.');
 			return;
 		}
 
-		this.chat.emit('startGame', {
+		this.chat.emit('createGame', {
 			game: gameName,
 		});
 	};
