@@ -69,6 +69,7 @@ function GameServer (games, app, chat) {
 	chat.addSocketEvent('listLiveGames', this.listLiveGames.bind(this));
 
 	chat.addSocketEvent('createGame', this.createGame.bind(this));
+	chat.addSocketEvent('joinGame', this.joinGame.bind(this));
 }
 
 // ----------------------
@@ -92,7 +93,49 @@ GameServer.prototype.liveGame = function(gameUuid) {
 // Listener events.
 // ----------------------
 
-// Start a game. The game will be created in a WAITING state.
+// List the games that can be created.
+GameServer.prototype.listGames = function(socket, session, data) {
+	this.chat.sendNotification(
+		socket,
+		util.format('The following games are available: %s. ' +
+			'To create a game send /createGame <game name>.', this.getAvailableGames().join(', ')),
+		data.roomName);
+};
+
+// List the games that are live and WAITING.
+GameServer.prototype.listLiveGames = function(socket, session, data) {
+	var liveGames = _.where(this.liveGames, {'state': 'WAITING'}),
+		formatStr,
+		msg,
+		games = [];
+
+	console.log('listLiveGames this.liveGames=%s', this.liveGames);
+	console.log(util.inspect(this.liveGames));
+
+	if (liveGames.length === 0) {
+		msg = 'There are no live games at the moment. Why don\'t you create one using /createGame?';
+	} else {
+		liveGames.forEach(function (game) {
+			games.push(util.format('%s by %s', game.gameType, game.owner));
+		});
+
+		if (liveGames.length === 1) {
+			formatStr = 'There is %s game waiting: %s';
+		} else {
+			formatStr = 'There are %s games waiting: %s';
+		}
+
+		msg = util.format(formatStr, liveGames.length, games.join(', '));
+	}
+
+	this.chat.sendNotification(
+		socket,
+		msg,
+		data.roomName);
+};
+
+
+// Create a game. The game will be created in a WAITING state.
 GameServer.prototype.createGame = function(socket, session, data) {
 	var gameUuid;
 
@@ -116,45 +159,6 @@ GameServer.prototype.createGame = function(socket, session, data) {
 		data.roomName);
 };
 
-// List the games that can be created.
-GameServer.prototype.listGames = function(socket, session, data) {
-	this.chat.sendNotification(
-		socket,
-		util.format('The following games are available: %s. ' +
-			'To start a game send /createGame <game name>.', this.getAvailableGames().join(', ')),
-		data.roomName);
-};
 
-// List the games that are live and WAITING.
-GameServer.prototype.listLiveGames = function(socket, session, data) {
-	var liveGames = _.where(this.liveGames, {'state': 'WAITING'}),
-		formatStr,
-		msg,
-		games = [];
-
-	console.log('listLiveGames this.liveGames=%s', this.liveGames);
-	console.log(util.inspect(this.liveGames));
-
-	if (liveGames.length === 0) {
-		msg = 'There are no live games at the moment. Why don\'t you start one using /createGame?';
-	} else {
-		liveGames.forEach(function (game) {
-			games.push(util.format('%s by %s', game.gameType, game.owner));
-		});
-
-		if (liveGames.length === 1) {
-			formatStr = 'There is %s game waiting: %s';
-		} else {
-			formatStr = 'There are %s games waiting: %s';
-		}
-
-		msg = util.format(formatStr, liveGames.length, games.join(', '));
-	}
-
-	this.chat.sendNotification(
-		socket,
-		msg,
-		data.roomName);
-};
 
 module.exports = GameServer;
