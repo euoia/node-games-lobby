@@ -14,20 +14,14 @@ define([], function() {
 	// ----------------------
 	// Commands.
 	// ----------------------
-	GameServer.prototype.startGame = function(gameName, numPlayers) {
+	GameServer.prototype.startGame = function(gameName) {
 		if (gameName === undefined) {
 			this.chat.addNotification(Date.now(), 'Must specify a game name.');
 			return;
 		}
 
-		if (numPlayers === undefined) {
-			this.chat.addNotification(Date.now(), 'Must specify the number of players.');
-			return;
-		}
-
 		this.chat.emit('startGame', {
 			game: gameName,
-			numPlayers: numPlayers
 		});
 	};
 

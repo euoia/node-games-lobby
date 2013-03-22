@@ -120,7 +120,7 @@ GameServer.prototype.listGames = function(socket, session, data) {
 	this.chat.sendNotification(
 		socket,
 		util.format('The following games are available: %s. ' +
-			'To start a game send /startGame <game name> <num players>.', this.getAvailableGames().join(', ')),
+			'To start a game send /startGame <game name>.', this.getAvailableGames().join(', ')),
 		data.roomName);
 };
 
