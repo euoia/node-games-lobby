@@ -150,13 +150,58 @@ GameServer.prototype.createGame = function(socket, session, data) {
 		owner: socket.username,
 		gameType: data.game,
 		state: 'WAITING',
-		game: new this.games[data.game]()
+		game: new this.games[data.game](),
+		created: Date.now(),
+		players: [socket.username]
 	};
 
 	this.chat.sendNotification(
 		socket,
 		util.format('Created game %s. Waiting for %s players.', data.game, this.game(data.game).getConfig('minPlayers')),
 		data.roomName);
+};
+
+GameServer.prototype.joinGame = function(socket, session, data) {
+	if (_.has(this.games, data.game) === false) {
+		this.chat.sendNotification(socket, util.format('No such game %s.', data.game), data.roomName);
+		return;
+	}
+
+	var liveGames = _.where(this.liveGames, {'state': 'WAITING'})
+		.sort(function(a,b) { return a.created > b.created });
+
+	var gameToJoin = null;
+	liveGames.forEach( function (game) {
+		if(gameToJoin === null && game.gameType === data.game) {
+			gameToJoin = game;
+		}
+	});
+
+	if (gameToJoin === null) {
+		this.chat.sendNotification(
+			socket,
+			util.format('Sorry, there there are no %s games to join. Why don\t you start one using /createGame?.', data.game),
+			data.roomName);
+		return;
+	}
+
+	this.addPlayerToGame(socket, session, gameToJoin);
+};
+
+GameServer.prototype.addPlayerToGame = function(socket, session, game) {
+	// TODO: It's cumbersome to carry the room around. Perhaps we need an object
+	// that contains socket, session, AND room name?
+	this.chat.sendNotification(
+		socket,
+		util.format('You have joined %s\'s game of %s.', game.owner, game.gameType));
+
+	game.players.push(socket.username);
+
+	if (game.players.length === this.game(game.gameType).getConfig('minPlayers')) {
+		this.chat.sendNotification(
+			socket,
+			util.format('%s\'s game of %s will now begin...', game.owner, game.gameType));
+	}
 };
 
 
