@@ -38,6 +38,18 @@
 //       proxy that in order to log any incoming socket events before they are
 //       passed on.
 // TODO: Handle cancellations if a player leaves or tries to start another game.
+//
+// Design decision regarding socket.io namespaces.
+// ----
+// It is quite difficult to see how we could use a namespace like /tictactoe
+// and still route messages to the actual game object. An alternative design
+// uses a namespace of the game UUID, and adds the listeners when the game is
+// created. This should work - but how do we tear down the listeners when the
+// game is finished? Additionally - is there any significant overhead with
+// having this large number of namespaces? What will happen if we cannot
+// destroy the listener when the game finishes?
+//
+//
 
 var uuid = require ('uuid'),
 	_ = require ('underscore'),
@@ -55,8 +67,21 @@ function GameServer (games, app, chat) {
 
 	// Hook up games.
 	games.forEach(function(gameID) {
+		// TODO: gameID could be confused with game.id. Fix this.
 		// TODO: Validate that all games conform to the required API.
+		//
+		// TODO: We need to somehow catch all events that are being sent for this
+		// game type, but forward them to the correct instance object. Should that
+		// be managed by the GameServer? Probably. See example:
+		// http://socket.io/#how-to-use
+		// .of('/chat')
+		// .on('connection', function (socket) {
+		//
+		//
+		// Then in the client:
+		// var chat = io.connect('http://localhost/chat')
 		$this.games[gameID] = require('./games/' + gameID);
+		app.get('/' + gameID + '/*', $this.games[gameID].play.bind($this, $this));
 	});
 
 	// ----------------------
@@ -65,11 +90,11 @@ function GameServer (games, app, chat) {
 	// socket object is neccessary to send messages.
 	// ----------------------
 	// Listener: listGames.
-	chat.addSocketEvent('listGames', this.listGames.bind(this));
-	chat.addSocketEvent('listLiveGames', this.listLiveGames.bind(this));
+	chat.addListener('listGames', this.listGames.bind(this));
+	chat.addListener('listLiveGames', this.listLiveGames.bind(this));
 
-	chat.addSocketEvent('createGame', this.createGame.bind(this));
-	chat.addSocketEvent('joinGame', this.joinGame.bind(this));
+	chat.addListener('createGame', this.createGame.bind(this));
+	chat.addListener('joinGame', this.joinGame.bind(this));
 }
 
 // ----------------------
@@ -150,7 +175,7 @@ GameServer.prototype.createGame = function(socket, session, data) {
 		owner: socket.username,
 		gameType: data.game,
 		state: 'WAITING',
-		game: new this.games[data.game](),
+		game: new this.games[data.game](this),
 		created: Date.now(),
 		players: [socket.username]
 	};
@@ -167,8 +192,7 @@ GameServer.prototype.joinGame = function(socket, session, data) {
 		return;
 	}
 
-	var liveGames = _.where(this.liveGames, {'state': 'WAITING'})
-		.sort(function(a,b) { return a.created > b.created });
+	var liveGames = _.where(this.liveGames, {'state': 'WAITING'}).sort(function(a,b) { return a.created > b.created; });
 
 	var gameToJoin = null;
 	liveGames.forEach( function (game) {
@@ -189,6 +213,8 @@ GameServer.prototype.joinGame = function(socket, session, data) {
 };
 
 GameServer.prototype.addPlayerToGame = function(socket, session, game) {
+	var $this = this;
+
 	// TODO: It's cumbersome to carry the room around. Perhaps we need an object
 	// that contains socket, session, AND room name?
 	this.chat.sendNotification(
@@ -198,12 +224,65 @@ GameServer.prototype.addPlayerToGame = function(socket, session, game) {
 	game.players.push(socket.username);
 
 	if (game.players.length === this.game(game.gameType).getConfig('minPlayers')) {
-		this.chat.sendNotification(
-			socket,
-			util.format('%s\'s game of %s will now begin...', game.owner, game.gameType));
+
+		game.state = 'PLAYING';
+
+		var countdown = 5;
+		function sendCountdown() {
+			var s;
+
+			if (countdown === 0) {
+				$this.launchGame(socket, session, game);
+			} else {
+				if (countdown === 1) {
+					s = 'second';
+				} else {
+					s = 'seconds';
+				}
+
+				$this.chat.sendNotification(
+					socket,
+					util.format('%s\'s game of %s will begin in %s %s...', game.owner, game.gameType, countdown, s));
+
+				countdown -= 1;
+				setTimeout(sendCountdown, 1000);
+			}
+		}
+
+		sendCountdown();
 	}
 };
 
+GameServer.prototype.launchGame = function(socket, session, game) {
+	// TODO: I don't really like emitting to the socket directly. We might want
+	// to intercept it at the chat layer. Is there a better way?
+	socket.emit('launchGame', {
+		url: util.format('%s/%s', game.gameType, game.id)
+	});
 
+	this.addGameConnectionListener(game.id);
+};
+
+// Called when a game is created to bind up listeners for that UUID.
+GameServer.prototype.addGameConnectionListener = function(gameUuid) {
+	var listeners = this.liveGames[gameUuid].game.getListeners(),
+		game = this.liveGames[gameUuid].game,
+		$this = this;
+
+	this.chat.addNamespacedListener(gameUuid, 'connection', function(err, socket, session) {
+		if (err) {
+			throw(err);
+		}
+
+		// Call the connection listener in the game.
+		game.connection(socket, session);
+
+		for (event in listeners) {
+			console.log('Bound %s event %s.', $this.liveGames[gameUuid].gameType, event);
+			socket.on(event, listeners[event].bind(game, socket, session));
+		}
+	});
+
+};
 
 module.exports = GameServer;

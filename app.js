@@ -67,4 +67,3 @@ var games = [
 
 var GameServer = require('./game_server');
 var gameServer = new GameServer(games, app, chat);
-

@@ -10,6 +10,8 @@ define([], function() {
 		chat.addCommand('listLiveGames', function() { chat.emit('listLiveGames') });
 		chat.addCommand('createGame', this.createGame.bind(this));
 		chat.addCommand('joinGame', this.joinGame.bind(this));
+
+		chat.addListener('launchGame', this.launchGame.bind(this));
 	}
 
 	// ----------------------
@@ -46,6 +48,13 @@ define([], function() {
 		this.chat.emit('joinGame', {
 			game: gameName,
 		});
+	};
+
+	// ----------------------
+	// Listeners.
+	// ----------------------
+	GameServer.prototype.launchGame = function(data) {
+		window.location.href = data.url;
 	};
 
 	return GameServer;
