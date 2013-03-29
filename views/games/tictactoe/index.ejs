@@ -1,0 +1,35 @@
+<!doctype html>
+
+<head>
+	<title>Tictactoe - a game for two players</title>
+	<link rel="stylesheet" type="text/css" href="/stylesheets/games/tictactoe/tictactoe.css" />
+	<link rel="stylesheet" type="text/css" href="/less/bootstrap/bootstrap.css" />
+
+	<script data-main="/javascripts/games/tictactoe/tictactoe" src="/javascripts/require.js"></script>
+</head>
+
+<body>
+	<div id="board">
+		<div id="topLeft"></div>
+		<div id="topMiddle"></div>
+		<div id="topRight"></div>
+
+		<div id="centerLeft"></div>
+		<div id="centerMiddle"></div>
+		<div id="centerRight"></div>
+
+		<div id="bottomLeft"></div>
+		<div id="bottomMiddle"></div>
+		<div id="bottomRight"></div>
+	</div>
+
+	<div id="messageArea">
+		Waiting for other player.
+	</div>
+
+	<div id="errorArea" class="error"></div>
+
+	<div id="backToChat"><a href="/">Go back to the lobby</a></div>
+</body>
+
+</html>
