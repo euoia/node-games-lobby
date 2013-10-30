@@ -9,7 +9,6 @@ API.
 This is the trogon lobby.
 
 Features:
-* Accounts with statistics.
 * Chat across games with private messages, announcements, lobbies, public rooms.
 * Games must conform only to a simple documented API.
 * Example games (tictactoe, TODO: hangman) provided.
