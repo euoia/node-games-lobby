@@ -49,6 +49,8 @@ Coding conventions
   not listeners. The event is the string, the event handler is the function.
   The arbitrary object that can be sent with an event is referred to as
   eventData.
+  * The node documentation does call event handlers "listeners":
+    http://nodejs.org/api/events.html.
 
 Little code patterns
 ----
