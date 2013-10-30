@@ -33,3 +33,6 @@ In the future maybe:
 * Player and game sharing with other lobbies.
 * Better account management features.
 * A webservice API for games and account handling.
+* Use an automatic documentation generator.
+* Use proper private and public variables and methods.
+* Command center client could ask server for command list.
