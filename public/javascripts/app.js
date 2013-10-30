@@ -11,15 +11,15 @@ requirejs.config({
 
 define([
     'jquery',
-    'chat',
+    'command-center-client',
     'game_server',
     'login'
-  ], function($, Chat, GameServer, Login) {
+  ], function($, CommandCenter, GameServer, Login) {
 
     var login;
 
     $(document).ready(function() {
-      var chat = new Chat({
+      var commandCenter = new CommandCenter({
         userListDiv: '#left-sidebar',
         messagesUl: '#chat-room .chat-box ul',
         messageScroll: '#content-body',
@@ -27,11 +27,11 @@ define([
         messageEntry: '#message-entry'
       });
 
-      var gameServer = new GameServer (chat);
+      var gameServer = new GameServer (commandCenter);
 
       // TODO: Move all chat logic out of Login and provide callback for loginSuccess.
       login = new Login(
-        chat,
+        commandCenter,
         {
           usernameInput: '#usernameInput',
           loginForm: '#login',
