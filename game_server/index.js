@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 30 Oct 2013 04:07:07 AM GMT
+// Last Modified:      Wed 30 Oct 2013 03:41:57 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -136,10 +136,10 @@ function GameServer (gameIDs, app, commandCenter) {
   // socket object is neccessary to send messages.
   // ----------------------
   // TODO: Update the listener text for all of these, probably requires client-side change.
-  this.commandCenter.addListener('listGames', this.listGames.bind(this));
-  this.commandCenter.addListener('listMatches', this.listWaitingMatches.bind(this));
-  this.commandCenter.addListener('createMatch', this.createMatch.bind(this));
-  this.commandCenter.addListener('joinMatch', this.joinMatch.bind(this));
+  this.commandCenter.addEventHandler('listGames', this.listGames.bind(this));
+  this.commandCenter.addEventHandler('listMatches', this.listWaitingMatches.bind(this));
+  this.commandCenter.addEventHandler('createMatch', this.createMatch.bind(this));
+  this.commandCenter.addEventHandler('joinMatch', this.joinMatch.bind(this));
 
   //------------------------------------------------------
   // matches:
@@ -280,7 +280,7 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
   // of the match ID.
   // TODO: How do namespaces work? How does the client specify the namespace?
   // TODO: Is the 'connection' event special?
-  this.commandCenter.addNamespacedListener(match.id, 'connection', function(err, socket, session) {
+  this.commandCenter.addNamespacedEventHandler(match.id, 'connection', function(err, socket, session) {
     if (err) {
       throw(err);
     }
