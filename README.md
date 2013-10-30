@@ -28,6 +28,12 @@ Why would this be useful to you?
 * You are happy for those games to conform to a simple API for the sake of the
   aforementioned conveniences.
 
+To be completed:
+* Accounts module with statistics
+* Database storage
+* More game examples
+* Wiki documentation, which explains which bits to modify.
+
 In the future maybe:
 * Handle games with more than 2 players.
 * Player and game sharing with other lobbies.
