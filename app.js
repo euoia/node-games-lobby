@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Wed 30 Oct 2013 10:51:02 AM GMT
+//  Last Modified:      Wed 30 Oct 2013 12:54:39 PM GMT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -15,20 +15,23 @@
 // TODO: Probably rename this node-game-lobby.
 // TODO: Good commenting and documentation.
 // TODO: Consider adding a config object to hold the games list.
+// TODO: Consider adding a routing manager to manage (filter, log) routes set
+//       up by modules and games.
 // --------------------------------------------------
 // Environment variables
 // ----
 // PORT      - If set, this port will be used. If not, the default port 3000
 //             will be used.
+// --------------------------------------------------
 
 var express = require('express'),                  // This is an express application.
-  routes = require('./routes'),                    // TODO: Rename this.
+  lobbyRoutes = require('./routes/lobby'),         // Lobby-related routes.
   sessionRoutes = require('./routes/session'),     // Session-related routes.
   http = require('http'),                          // See TODO below.
   path = require('path'),                          // Required for OS-independency (path.join).
   lessMiddleware = require('less-middleware'),     // CSS uses less, which is compiled on-the-fly.
   RedisStore = require('connect-redis')(express),  // Used for express session storage.
-  Chat = require('iochat');                        // The chat server (iochat module).
+  CommandCenter = require('command-center');       // The command center module.
 
 // --------------------------------------------------
 // Application configuration.
@@ -102,9 +105,11 @@ app.configure('development', function() {
   app.use(express.errorHandler());
 });
 
+// --------------------------------------------------
 // Assign routes.
-// Index - give this a better name. Index should not be called routes.index!
-app.get('/', routes.index);
+
+// Use the lobby login as the landing page.
+app.get('/', lobby.login);
 
 // Hook up any POST routes requested by session.js - put them under /session/routeName.
 for (var routePath in sessionRoutes.postRoutes) {
@@ -120,10 +125,13 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 // Create the chat server.
 // TODO: Rename to commandCenter.
-var chat = new Chat (server, sessionStore, cookieParser);
+var commandCenter = new CommandCenter (server, sessionStore, cookieParser);
 
-// Create the game server, give it a handle to the chat server.
+// Create the game server, give it a handle to the express application and command center.
+// The handle to the command center is required so that it can add socket.io event listeners.
+// The handle to the express application is required in order to bind game-specific routes.
+//
 // TODO: Rename to gameLobby.
 // TODO: Check that app and chat are really required by the lobby.
 var GameServer = require('./game_server');
-var gameServer = new GameServer(games, app, chat);
+var gameServer = new GameServer(games, app, commandCenter);
