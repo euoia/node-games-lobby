@@ -13,6 +13,7 @@ Features:
 
 To use this:
 * Clone this repository.
+* Run `npm install`
 * Look at the game documentation (TODO: link).
 * Look at the example tictactoe and hangman games.
 * Write your game to conform to the documented game API.
