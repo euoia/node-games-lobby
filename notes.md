@@ -4,10 +4,46 @@ Ideas
   more of a command-center or something than specifically chat.
   RENAME IT!
 
-Coding conventions
+Style conventions
 ----
 * This: http://nodeguide.com/style.html Any consistent deviations let me know! Key points:
    * Variables and properties should use lower camel case capitalization.
+* Files should have a header like:
+```
+//  Created:            TIMESTAMP
+//  Last Modified:      TIMESTAMP
+//  Author:             James Pickard <james.pickard@gmail.com>
+// --------------------------------------------------
+// Summary
+// ----
+// The node-socket-games express application entry point.
+//
+// To run this:
+// node app.js
+```
+
+* Header dividers:
+```javascript
+// --------------------------------------------------
+// Summary
+// ----
+```
+
+* Code section dividers.
+```javascript
+// --------------------------------------------------
+// Emitters.
+
+// Send the user list of a given room to the socket.
+Chat.prototype.sendUserList = function(socket, roomName) {
+...
+}
+```
+
+Coding conventions
+----
+* Events are called events, not listeners. The arbitrary object that can be
+  sent with an event is referred to as eventData.
 
 Little code patterns
 ----
