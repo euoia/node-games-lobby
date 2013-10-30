@@ -75,3 +75,9 @@ for (var routePath in sessionRoutes.postRoutes) {
   }
 }
 ```
+
+Things to think about
+----
+Is it bad to mix "singleton style" conventions (extending the Constructor) with
+"class style" conventions (extending the prototype) in the same module? Is
+there a good alternative?
