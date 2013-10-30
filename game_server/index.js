@@ -1,43 +1,38 @@
-// This is...
-//
+// Created:            Wed 30 Oct 2013 01:44:14 AM GMT
+// Last Modified:      Wed 30 Oct 2013 04:07:07 AM GMT
+// Author:             James Pickard <james.pickard@gmail.com>
+// --------------------------------------------------
+// Summary
+// ----
+// The GameServer object contains all the games and all of the matches that are
+// in-progress.
+// --------------------------------------------------
+// TODOs
+// ----
 // TODO: Sort out match/game nomenclature.
-
-
-// Rules:
-//  A player (i.e. username) can only be waiting for one game at a time.
-//
-// Games (gameServer.games):
-//  Object keyed on game identifier. Values are the result of requiring the game module.
-//  Game identifier must correspond to the directory in which the game exists.
-//  Example game identifiers: tictactoe, micro_brew_wars, fleches.
-//
-// Live Games (gameServer.liveGames):
-//  Object keyed on a game's uuid. This values are objects themselves
-//  describing the running game. In this case a running game includes games
-//  which are waiting for enough players to start.
-//
-// Live Game (gameServer.liveGames[uuid]):
-//  id - uuid identifying the game.
-//  owner - player who started the game.
-//  gameType - game identifier for the type of game.
-//  state - one of:
-//    WAITING - waiting for enough players to join.
-//    PLAYING - currently playing.
-//
+// TODO: Thoroughly rename chat to command center.
+// TODO: Fix handler/listener/event etc.
+// TODO: Handling of sockets/sessions should be simpler (not 2 objects).
+// TODO: Use eventData instead of simply data, to convey that it is sent by the event emitter.
+// TODO: Is roomName tacked onto the eventData? If so - that's a bit bad to a have a reserved key.
+// TODO: It would be good if the game code did not need to deal with: sockets, sessions, requests, responses.
+// --------------------------------------------------
+// Limitations / Rules:
+// ----
+//  1. A player (i.e. username) can only be waiting for one game at a time.
+// --------------------------------------------------
 // General notes:
-//  1. game on its own refers to a game ID (e.g. tictactoe).
-//  2. Errors. What to do? Throw an error? Yes for now. This means that a
+//  1. Errors. What to do? Throw an error? Yes for now. This means that a
 //     client could theoretically cause a server error by submitting bad data.
 //     That's fine for now.
-//  3. Callbacks - should we use them?
 //
 // TODO: Handle games with a variable number of players.
 // TODO: Since we are adding socket events with chat.addSocketEvent we could
 //       proxy that in order to log any incoming socket events before they are
 //       passed on.
 // TODO: Handle cancellations if a player leaves or tries to start another game.
-//
-// Design decision regarding socket.io namespaces.
+// --------------------------------------------------
+// Regarding socket.io namespaces.
 // ----
 // It is quite difficult to see how we could use a namespace like /tictactoe
 // and still route messages to the actual game object. An alternative design
@@ -47,46 +42,141 @@
 // having this large number of namespaces? What will happen if we cannot
 // destroy the listener when the game finishes?
 //
+// - Update 2013-10-30: No idea what this means.
+// --------------------------------------------------
+// Game object documentation
+// ----
+// Your game object can do anything it likes. It may require any libraries it
+// likes. The object returned by require()'ing games/gameId must implement the
+// following methods:
+// TODO: Get rid of req and res in the actual game. The game can only go one of
+// several ways!
+// TODO: This is awful - the game should not have access to the gameServer
+// object. This function should be proxied through a gameServer function which
+// does its stuff.
+//
+//    Constructor(gameServer) -
+//      The constructor should set up a new game instance state. The game
+//      object will be instantiated when a new game is created. A reference to
+//      the gameServer object ought to be kept. (TODO: Get rid of this
+//      requirement).
+//
+//    ----
+//    Match shared functions.
+//
+//    play(gameServer, req, res) -
+//      Using the matchID from the URL this express handler should lookup the match, and if found initialise it.
+//      The game should check that the gameServer has the game (BAD!) and if so
+//      initialise the game state. If successful the HTTP response (probably an
+//      initial match state - see example views/games/tictactoe.js and
+//      public/javascripts/games/tictactoe.js.
+//
+//    getConfig(configName) -
+//      Return config settings for the game. Config object must have keys:
+//      minPlayers, maxPlayers.
+//
+//    TODO: Actually just have the constructor return an object with all required keys filled in, e.g:
+//      var tictactoe = {
+//        minimumPlayers: 2,
+//        maximumPlayers: 2,
+//        connectionEvent: this.connection.bind(this),
+//        playEvent: this.play.bind(this),
+//        events: {
+//          'select': this.select.bind(this)
+//        }
+//      }
+//
+//    ----
+//    Match instance methods.
+//
+//    prototype.connection(socket, session) -
+//      Called when a connection from the socket comes in. The game should
+//      store the sockets and sessions so that it is possible to emit events to
+//      all players.
+//
+//    prototype.getEventFunctions() -
+//      Return a object whose keys are event names and whose values are
+//      functions. The functions will be called when the events come in on the
+//      match namespace.
+//
+//
 //
 
 var uuid = require ('uuid'),
   _ = require ('underscore'),
-  util = require('util');
+  util = require('util'); // TODO: What is util? Sounds fishy...
 
-function GameServer (games, app, chat) {
-  var $this = this,
-    gameName;
-
-  // Exposed parameters.
-  this.liveGames = {};
-
-  //  The list of enabled games. These will each be required so a corresponding
-  //  directory must exist, or the application will error.
-  //  TODO: Shouldn't this be an array?
-  this.games = {};
-
+// The GameServer object contains all the games available and all the matches
+// being played.
+//
+// gameIDs          - Array of game IDs (strings).
+//                    Each game must conform to the API and exist in the
+//                    filesystem at games/gameID/index.js.
+// app              - Express application object.
+// commandCenter    - Command center object.
+function GameServer (gameIDs, app, commandCenter) {
   //  Handler to the express application.
-  //  TODO: Why is this used? A: This is used to bind the routes of a game to the express application.
-  //  TODO: Perhaps we ought to return the names of the bound routes so that
-  //  other modules can check for conflict. Complicated. Maybe we need a "route manager".
+  //  This is used to bind the routes of a game to the express application.
+  //  TODO: Could we decouple from express easily? Put the logic in a routing
+  //  manager possibly. Low priority!
   this.app = app;
 
-  //  trogon-chat object.
-  //  TODO: Why is this used? A: This is used to send notifications to the
-  //  socket that requests things like game lists. If we didn't have this, we'd
-  //  need to attach something to either the session or the socket object.
+  //  Command center object.
+  //  This is used to send a properly formatted response to a socket object
+  //  after a command has been issued. See
   //
-  //  TODO: Is this what we'll call it? A: No. It will be command center.
-  this.chat = chat;
+  //  like game lists. If we didn't have this, we'd need to attach something to
+  //  either the session or the socket object.
+  //
+  this.commandCenter = commandCenter;
+
+  // ----------------------
+  // Command center commands.
+  // TODO: Do these functions really need access to the session object? The
+  // socket object is neccessary to send messages.
+  // ----------------------
+  // TODO: Update the listener text for all of these, probably requires client-side change.
+  this.commandCenter.addListener('listGames', this.listGames.bind(this));
+  this.commandCenter.addListener('listMatches', this.listWaitingMatches.bind(this));
+  this.commandCenter.addListener('createMatch', this.createMatch.bind(this));
+  this.commandCenter.addListener('joinMatch', this.joinMatch.bind(this));
+
+  //------------------------------------------------------
+  // matches:
+  this.matches = {};
+  // Matches that have not been removed from memory.
+  //    object key: match UUID.
+  //    object val: match object (see below).
+
+  // match object:
+  //  id        - UUID identifying the match.
+  //  owner     - player who started the match.
+  //  gameID    - gameID of the game.
+  //  state     - one of:
+  //    WAITING - waiting for enough players to join.
+  //    PLAYING - currently playing.
+  //------------------------------------------------------
+
+  //------------------------------------------------------
+  //  The list of enabled games (object keyed on game identifier).
+  this.games = {};
+  // Access to the game objects themselves.
+  //    object key: game ID
+  //    object val: game object (see below).
+  //
+  // The game object is the result of require()'ing games/game ID. Further,
+  // the game object must implement certain methods. See game object documentation.
 
   // Hook up all the games:
   // * Require the files.
   // * Bind /gameID/matchID route to game_object.play.
-  games.forEach(function(gameID) {
-    // TODO: gameID could be confused with game.id. Fix this.
-    // TODO: Validate that all games conform to the required API.
-    //
-    // TODO: We need to somehow catch all events that are being sent for this
+  for (var gameIDidx = 0; gameIDidx < gameIDs.length; gameIDidx += 1) {
+    var gameID = gameIDs[gameIDidx];
+
+    //------------------------------------------------------
+    // Mysterious sidebar [2013-10-30 - not sure what this is about]
+    // -----
+    // We need to somehow catch all events that are being sent for this
     // game type, but forward them to the correct instance object. Should that
     // be managed by the GameServer? Probably. See example:
     // http://socket.io/#how-to-use
@@ -96,62 +186,62 @@ function GameServer (games, app, chat) {
     //
     // Then in the client:
     // var chat = io.connect('http://localhost/chat')
-    $this.games[gameID] = require('./games/' + gameID);
-    app.get('/' + gameID + '/*', $this.games[gameID].play.bind($this, $this));
-  });
+    //------------------------------------------------------
 
-  // ----------------------
-  // Hook up listeners.
-  // TODO: Do these functions really need access to the session object? The
-  // socket object is neccessary to send messages.
-  // ----------------------
-  // TODO: Rename chat to command-center (or something).
-  chat.addListener('listGames', this.listGames.bind(this));
-  chat.addListener('listLiveGames', this.listLiveGames.bind(this));
+    // Require the object.
+    var game = require('./games/' + gameID);
+    this.games[gameID] = game;
 
-  chat.addListener('createGame', this.createGame.bind(this));
-  chat.addListener('joinGame', this.joinGame.bind(this));
+    // TODO: Validate the game object conforms to the required API.
+    // TODO: Do we really need access to app.get here? Can't a higher level
+    // take care of this?
+    app.get('/' + gameID + '/*', game.play.bind(this, this));
+  }
+
 }
 
 // ----------------------
 // Helper functions.
 // ----------------------
 
-// Return as an array the names of games that can be played.
+// Return as an array the gameIDs of games that can be played.
 GameServer.prototype.getAvailableGames = function() {
   return Object.keys(this.games);
 };
 
+// Return the game object given its gameID.
 GameServer.prototype.game = function(gameID) {
   return this.games[gameID];
 };
 
-GameServer.prototype.liveGame = function(gameUuid) {
-  return this.liveGames[gameUuid];
+// Returns a match given its UUID.
+GameServer.prototype.match = function(matchUuid) {
+  return this.matches[matchUuid];
 };
 
 // Add a player to a specific match.
-GameServer.prototype.addPlayerToGame = function(socket, session, game) {
+GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
   var $this = this;
 
   // TODO: It's cumbersome to carry the room around. Perhaps we need an object
   // that contains socket, session, AND room name?
-  this.chat.sendNotification(
+  this.commandCenter.sendNotification(
     socket,
-    util.format('You have joined %s\'s game of %s.', game.owner, game.gameType));
+    util.format('You have joined %s\'s game of %s.', match.owner, match.gameID));
 
-  game.players.push(socket.username);
+  // Add the player to the array of usernames playing.
+  match.playerUsernames.push(socket.username);
 
-  if (game.players.length === this.game(game.gameType).getConfig('minPlayers')) {
-
-    game.state = 'PLAYING';
+  // TODO: Could this not be a generic method?
+  if (match.playerUsernames.length === match.game.getConfig('minPlayers')) {
+    match.state = 'PLAYING';
 
     var countdown = 5;
-    function sendCountdown() {
+    var sendCountdown = function() {
       var s;
 
       if (countdown === 0) {
-        $this.launchGame(socket, session, game);
+        $this.launchMatch(socket, session, match);
       } else {
         if (countdown === 1) {
           s = 'second';
@@ -159,51 +249,60 @@ GameServer.prototype.addPlayerToGame = function(socket, session, game) {
           s = 'seconds';
         }
 
-        $this.chat.sendNotification(
+        $this.commandCenter.sendNotification(
           socket,
-          util.format('%s\'s game of %s will begin in %s %s...', game.owner, game.gameType, countdown, s));
+          util.format('%s\'s game of %s will begin in %s %s...', match.owner, match.gameID, countdown, s));
 
         countdown -= 1;
         setTimeout(sendCountdown, 1000);
       }
-    }
+    };
 
     sendCountdown();
   }
 };
 
 // Launch a match - there are enough players.
-GameServer.prototype.launchGame = function(socket, session, game) {
+GameServer.prototype.launchMatch = function(socket, session, match) {
+
+  // Tell the client that it can launch the game and provide a url of the format:
+  // gameID/matchID for the client to redirect to.
+  //
   // TODO: I don't really like emitting to the socket directly. We might want
   // to intercept it at the chat layer. Is there a better way?
-  socket.emit('launchGame', {
-    url: util.format('%s/%s', game.gameType, game.id)
+  // TODO: Rename this event launchGame to lauchMatch - required client-side change.
+  // TODO: The games themselves could possibly override this if ever desired.
+  socket.emit('launchMatch', {
+    url: util.format('%s/%s', match.gameID, match.id)
   });
 
-  this.addGameConnectionListener(game.id);
-};
-
-// Called when a game is created to bind up listeners for that UUID.
-// TODO: The callstack here is a bit weird.
-GameServer.prototype.addGameConnectionListener = function(gameUuid) {
-  var listeners = this.liveGames[gameUuid].game.getListeners(),
-    game = this.liveGames[gameUuid].game,
-    $this = this;
-
-  this.chat.addNamespacedListener(gameUuid, 'connection', function(err, socket, session) {
+  // Add a handler for the connection event when it comes in on the namespace
+  // of the match ID.
+  // TODO: How do namespaces work? How does the client specify the namespace?
+  // TODO: Is the 'connection' event special?
+  this.commandCenter.addNamespacedListener(match.id, 'connection', function(err, socket, session) {
     if (err) {
       throw(err);
     }
 
-    // Call the connection listener in the game.
-    game.connection(socket, session);
+    // Call the connection method in the game instance.
+    match.gameInstance.connection(socket, session);
 
-    for (event in listeners) {
-      console.log('Bound %s event %s.', $this.liveGames[gameUuid].gameType, event);
-      socket.on(event, listeners[event].bind(game, socket, session));
+    // This is the magic bit.
+    var eventFunctions = match.gameInstance.getEventFunctions();
+
+    // Games can set up their own listeners for socket.io events that will
+    // passed directly to the game instance. This way the front-end can emit socket.io
+    // events and have the game instance respond.
+    for (var event in eventFunctions) {
+      if (eventFunctions.hasOwnProperty(event)) {
+        var eventFunction = eventFunctions[event];
+
+        socket.on(event, eventFunction.bind(match, socket, session));
+        console.log('Bound %s event for a %s game.', event, match.gameID, ev);
+      }
     }
   });
-
 };
 
 
@@ -212,109 +311,135 @@ GameServer.prototype.addGameConnectionListener = function(gameUuid) {
 // ----------------------
 
 // A socket has requested the list of games that may be created.
-GameServer.prototype.listGames = function(socket, session, data) {
-  this.chat.sendNotification(
+GameServer.prototype.listGames = function(socket, session, eventData) {
+  // TODO: Update the command.
+  this.commandCenter.sendNotification(
     socket,
     util.format('The following games are available: %s. ' +
-      'To create a game send /createGame <game name>.', this.getAvailableGames().join(', ')),
-    data.roomName);
+      'To create a game send /createMatch <game name>.', this.getAvailableGames().join(', ')),
+    eventData.roomName);
 };
 
-// A socket has requested the list of games that are currently live and WAITING.
-GameServer.prototype.listLiveGames = function(socket, session, data) {
-  var liveGames = _.where(this.liveGames, {'state': 'WAITING'}),
-    formatStr,
-    msg,
-    games = [];
-
-  console.log('listLiveGames this.liveGames=%s', this.liveGames);
-  console.log(util.inspect(this.liveGames));
-
-  if (liveGames.length === 0) {
-    msg = 'There are no live games at the moment. Why don\'t you create one using /createGame?';
-  } else {
-    liveGames.forEach(function (game) {
-      games.push(util.format('%s by %s', game.gameType, game.owner));
-    });
-
-    if (liveGames.length === 1) {
-      formatStr = 'There is %s game waiting: %s';
-    } else {
-      formatStr = 'There are %s games waiting: %s';
-    }
-
-    msg = util.format(formatStr, liveGames.length, games.join(', '));
-  }
-
-  this.chat.sendNotification(
-    socket,
-    msg,
-    data.roomName);
-};
-
-
-// A socket has requested to create a game. The game will be created in a
+// A socket has requested to create a match. The match will be created in a
 // WAITING state.
-GameServer.prototype.createGame = function(socket, session, data) {
+// TODO: data.game should be data.gameID.
+// TODO: data is not a well named variable.
+GameServer.prototype.createMatch = function(socket, session, eventData) {
   var gameUuid;
 
   // Check the game name is one of the available games.
-  if (_.has(this.games, data.game) === false) {
-    this.chat.sendNotification(socket, util.format('No such game %s.', data.game), data.roomName);
+  if (_.has(this.games, eventData.gameID) === false) {
+    this.commandCenter.sendNotification(socket, util.format('No such game %s.', eventData.gameID), data.roomName);
     return;
   }
 
-  // Create a UUID for the match. This is the unique ID for the match.
-  // TODO: Rename gameUuid to matchUuid.
-  // TODO: Rename liveGames to liveMatches.
-  gameUuid = uuid.v4();
+  // Instantiate a game for the match.
+  var matchID          = uuid.v4();
+  var Game             = this.games[eventData.gameID];
+  var gameInstance     = new Game(this);
 
-  // Create the match.
-  this.liveGames[gameUuid] = {
-    id: gameUuid,
-    owner: socket.username,
-    gameType: data.game,
-    state: 'WAITING',
-    game: new this.games[data.game](this),
-    created: Date.now(),
-    players: [socket.username]
+  // Instantiate the match.
+  var match = this.matches[matchID] = {
+    id:              matchID,
+    owner:           socket.username,
+    game:            Game,
+    gameInstance:    gameInstance,
+    gameID:          eventData.gameID,
+    state:           'WAITING',
+    created:         Date.now(),
+    playerUsernames: [socket.username]
   };
 
   // Tell the requestor that the game was created.
-  this.chat.sendNotification(
+  this.commandCenter.sendNotification(
     socket,
-    util.format('Created game %s. Waiting for %s players.', data.game, this.game(data.game).getConfig('minPlayers')),
-    data.roomName);
+    util.format('Created match %s. Waiting for %s players.',
+                eventData.gameID,
+                Game.getConfig('minPlayers')),
+    eventData.roomName);
 };
 
-// A socket has requested to join a specific match.
-GameServer.prototype.joinGame = function(socket, session, data) {
-  // Check the match ID exists.
-  if (_.has(this.games, data.game) === false) {
-    this.chat.sendNotification(socket, util.format('No such game %s.', data.game), data.roomName);
+
+// A socket has requested the list of matches that are WAITING.
+// TODO: Move display of this information to the client, remove server-side
+// formatting.
+GameServer.prototype.listWaitingMatches = function(socket, session, eventData) {
+  var waitingMatches = _.where(this.matches, {'state': 'WAITING'}),
+    formatStr,              // A formatter string.
+    msg,                    // The message to send back to the socket.
+    matchDescriptions = []; // Array of strings describing waiting matches.
+
+
+  console.log('listWaitingMatches');
+  console.log(util.inspect(this.matches));
+
+  if (waitingMatches.length === 0) {
+    msg = 'There are no waiting matches at the moment. You can create one using /createMatch <game name>.';
+  } else {
+    waitingMatches.forEach(function (match) {
+      matchDescriptions.push(util.format('%s created by %s',
+                             match.gameID,
+                             match.owner));
+    });
+
+    if (waitingMatches.length === 1) {
+      formatStr = 'There is %s match waiting: %s';
+    } else {
+      formatStr = 'There are %s matches waiting: %s';
+    }
+
+    msg = util.format(
+      formatStr,
+      waitingMatches.length,
+      matchDescriptions.join(', '));
+  }
+
+  this.commandCenter.sendNotification(
+    socket,
+    msg,
+    eventData.roomName);
+};
+
+
+// joinMatch event handler.
+//
+// A socket has requested to join a WAITING game.
+GameServer.prototype.joinMatch = function(socket, session, eventData) {
+  // Check the game exists.
+  if (_.has(this.games, eventData.gameID) === false) {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('No such game %s.', eventData.gameID),
+      eventData.roomName);
+
     return;
   }
 
   // Sort WAITING matches based on created date.
-  var liveGames = _.where(this.liveGames, {'state': 'WAITING'}).sort(function(a,b) { return a.created > b.created; });
+  var sortedWaitingMatches = _.where(
+    this.matches,
+    {'state': 'WAITING'}).sort(function(a,b) {
+      return a.created > b.created;
+    });
 
   // Pick the oldest WAITING match.
-  var gameToJoin = null;
-  liveGames.forEach( function (game) {
-    if(gameToJoin === null && game.gameType === data.game) {
-      gameToJoin = game;
+  // TODO: There is probably a slightly more readable way to do this using underscore.
+  var matchToJoin = null;
+  sortedWaitingMatches.forEach( function (match) {
+    if(matchToJoin === null && match.gameID === eventData.gameID) {
+      matchToJoin = match;
     }
   });
 
-  if (gameToJoin === null) {
-    this.chat.sendNotification(
+  if (matchToJoin === null) {
+    this.commandCenter.sendNotification(
       socket,
-      util.format('Sorry, there there are no %s games to join. You can start one using /createGame.', data.game),
-      data.roomName);
+      util.format('Sorry, there there are no %s matches to join. You can start one using /createMatch <game name>.', eventData.gameID),
+      eventData.roomName);
     return;
   }
 
-  this.addPlayerToGame(socket, session, gameToJoin);
+  this.addPlayerToMatch(socket, session, matchToJoin);
 };
 
 module.exports = GameServer;

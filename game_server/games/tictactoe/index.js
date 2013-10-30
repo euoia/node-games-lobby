@@ -2,6 +2,8 @@
 // For example, the ID of this game is tictactoe - all routes will be prefixed with tictactoe.
 //
 // TODO: Resume.
+// TODO: Handle observers (non-players) in the connection event.
+// they'd be an observer.
 
 var util = require('util');
 
@@ -26,16 +28,6 @@ function Tictactoe (gameServer) {
   };
 }
 
-Tictactoe.prototype.init = function(req, res) {
-  this.players[req.session.username] = {
-    username: req.session.username,
-    socket: null
-  };
-
-  console.log('%s loaded the tictactoe page.', req.session.username);
-  res.render('games/tictactoe/index', { title: 'Chat' });
-};
-
 // ----------------------
 // Socket listener functions.
 // ----------------------
@@ -44,7 +36,6 @@ Tictactoe.prototype.emitAll = function (event, data) {
     this.players[username].socket.emit(event, data);
   }
 };
-
 
 Tictactoe.prototype.start = function () {
   console.log('Tictactoe start');
@@ -92,7 +83,6 @@ Tictactoe.prototype.select = function (socket, session, data) {
     return this.emitAll('end', {msg: 'The game ended in stalemate.'});
   }
 
-
   // Pass the move to the next player.
   var nextPlayerIdx = (this.playerUsernames.indexOf(session.username) + 1) % 2;
   this.nextPlayer = this.playerUsernames[nextPlayerIdx];
@@ -102,8 +92,22 @@ Tictactoe.prototype.select = function (socket, session, data) {
   });
 };
 
-// Might as well figure out what kind of win it was, since we would need to do
-// this one the client anyway.
+// --------------------------------------------------
+// Helper functions
+//
+Tictactoe.prototype.addPlayer = function(username) {
+  this.players.push({
+    username: username,
+    socket:   null
+  });
+};
+
+// Check for a win. Returns either:
+//   { win: false }
+// or something like:
+//   { win: true, type: 'row', val: 0 }
+// Where type can be 'row', 'col', or 'diag' and val is 0 to 2 inclusive.
+//
 Tictactoe.prototype.checkWin = function(username) {
   var b = this.board,
     u = username;
@@ -166,9 +170,7 @@ Tictactoe.prototype.isStalemate = function() {
 // All functions in this section must be implemented by every game.
 // ----------------------
 
-// Must supply a connection function.
-// TODO: It is possible that one of the non-players could join. In that case,
-// they'd be an observer.
+// prototype.connection - Handle a socket connection from a session.
 Tictactoe.prototype.connection = function(socket, session) {
   console.log('Tictactoe connection from %s.', session.username);
   this.players[session.username].socket = socket;
@@ -181,25 +183,40 @@ Tictactoe.prototype.connection = function(socket, session) {
 
 // Express request route that loads the game page.
 Tictactoe.play = function (gameServer, req, res) {
-  var gameUuid = req.params[0];
+  // Extract the matchID from the URL. The URL is always of the form:
+  // gameID/matchID.
+  var matchID = req.params[0];
+  var username = req.session.username;
 
-  if (gameServer.liveGames[gameUuid] === undefined) {
+  // TODO: Do not access gameserver.
+  if (gameServer.matches[matchID] === undefined) {
     return res.end('Game not found.');
   }
 
-  gameServer.liveGames[gameUuid].game.init(req, res);
+  // Add the player.
+  gameServer.matches[matchID].addPlayer({
+    username: username,
+    socket:   null
+  });
+
+  // Render the view.
+  // TODO: res.render could possibly be confined to games/tictactoe.
+  // TODO: Do we really need the request and response here?
+  console.log('%s loaded the tictactoe page.', username);
+  res.render('games/tictactoe/index', { title: 'Chat' });
 };
 
 // Return an object which maps event name to function.
-Tictactoe.prototype.getListeners = function() {
-  var listeners = {
+Tictactoe.prototype.getEventFunctions = function() {
+  var eventFunctions = {
     'select': this.select
   };
 
-  return listeners;
+  return eventFunctions;
 };
 
 // Return game configuration. Must-have keys: minPlayers, maxPlayers.
+// TODO: Is this bad practice?
 Tictactoe.getConfig = function(configName) {
   var config = {
     minPlayers: 2,

@@ -2,60 +2,51 @@
 // could possibly do with a chat.addSimpleCommand function.
 //
 define([], function() {
-	// Pass in a instance of Chat (to be renamed Console - or something).
-	function GameServer (chat) {
-		this.chat = chat;
+  // Pass in a instance of Chat (to be renamed Console - or something).
+  function GameServer (chat) {
+    this.chat = chat;
 
-		chat.addCommand('listGames', function() { chat.emit('listGames') });
-		chat.addCommand('listLiveGames', function() { chat.emit('listLiveGames') });
-		chat.addCommand('createGame', this.createGame.bind(this));
-		chat.addCommand('joinGame', this.joinGame.bind(this));
+    // Commands.
+    chat.addCommand('listGames', function() { chat.emit('listGames'); });
+    chat.addCommand('listMatches', function() { chat.emit('listMatches'); });
+    chat.addCommand('createMatch', this.createMatch.bind(this));
+    chat.addCommand('joinMatch', this.joinMatch.bind(this));
 
-		chat.addListener('launchGame', this.launchGame.bind(this));
-	}
+    // Listener events.
+    chat.addListener('launchMatch', this.launchGame.bind(this));
+  }
 
-	// ----------------------
-	// Commands.
-	// ----------------------
-	GameServer.prototype.createGame = function(gameName) {
-		if (gameName === undefined) {
-			this.chat.addNotification(Date.now(), 'Must specify a game name.');
-			return;
-		}
+  // ----------------------
+  // Commands.
+  // ----------------------
+  GameServer.prototype.createMatch = function(gameID) {
+    if (gameID === undefined) {
+      this.chat.addNotification(Date.now(), 'Must specify a game name.');
+      return;
+    }
 
-		this.chat.emit('createGame', {
-			game: gameName,
-		});
-	};
+    this.chat.emit('createMatch', {
+      gameID: gameID
+    });
+  };
 
-	GameServer.prototype.createGame = function(gameName) {
-		if (gameName === undefined) {
-			this.chat.addNotification(Date.now(), 'Must specify a game name.');
-			return;
-		}
+  GameServer.prototype.joinMatch = function(gameID) {
+    if (gameID === undefined) {
+      this.chat.addNotification(Date.now(), 'Must specify a game name.');
+      return;
+    }
 
-		this.chat.emit('createGame', {
-			game: gameName,
-		});
-	};
+    this.chat.emit('joinMatch', {
+      gameID: gameID
+    });
+  };
 
-	GameServer.prototype.joinGame = function(gameName) {
-		if (gameName === undefined) {
-			this.chat.addNotification(Date.now(), 'Must specify a game name.');
-			return;
-		}
+  // ----------------------
+  // Listeners.
+  // ----------------------
+  GameServer.prototype.launchGame = function(data) {
+    window.location.href = data.url;
+  };
 
-		this.chat.emit('joinGame', {
-			game: gameName,
-		});
-	};
-
-	// ----------------------
-	// Listeners.
-	// ----------------------
-	GameServer.prototype.launchGame = function(data) {
-		window.location.href = data.url;
-	};
-
-	return GameServer;
+  return GameServer;
 });
