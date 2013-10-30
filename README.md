@@ -16,7 +16,7 @@ Features:
 
 To use this:
 * Clone this repository.
-* Look at the game documentation.
+* Look at the game documentation (TODO: link).
 * Look at the example tictactoe and hangman games.
 * Write your game to conform to the documented game API.
 * Run this program on a web server somewhere.
@@ -29,6 +29,7 @@ Why would this be useful to you?
   aforementioned conveniences.
 
 In the future maybe:
+* Handle games with more than 2 players.
 * Player and game sharing with other lobbies.
 * Better account management features.
 * A webservice API for games and account handling.
