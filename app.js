@@ -1,23 +1,37 @@
-/*  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
- *  Last Modified:      Wed 30 Oct 2013 03:25:42 AM GMT
- *  Author:             James Pickard <james.pickard@gmail.com>
- *
- * The main application.
- *
- * TODO:
- *  * Fix inline TODOS.
- *  * Better module names.
- *  * Good commenting and documentation.
- */
+//  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
+//  Last Modified:      Wed 30 Oct 2013 10:51:02 AM GMT
+//  Author:             James Pickard <james.pickard@gmail.com>
+// --------------------------------------------------
+// Summary
+// ----
+// The node-socket-games express application entry point.
+//
+// To run this:
+// node app.js
+// --------------------------------------------------
+// TODOs
+// ----
+// TODO: Fix inline TODOS.
+// TODO: Probably rename this node-game-lobby.
+// TODO: Good commenting and documentation.
+// TODO: Consider adding a config object to hold the games list.
+// --------------------------------------------------
+// Environment variables
+// ----
+// PORT      - If set, this port will be used. If not, the default port 3000
+//             will be used.
 
 var express = require('express'),                  // This is an express application.
   routes = require('./routes'),                    // TODO: Rename this.
-  session = require('./routes/session'),           // Session-related routes.
+  sessionRoutes = require('./routes/session'),     // Session-related routes.
   http = require('http'),                          // See TODO below.
   path = require('path'),                          // Required for OS-independency (path.join).
   lessMiddleware = require('less-middleware'),     // CSS uses less, which is compiled on-the-fly.
   RedisStore = require('connect-redis')(express),  // Used for express session storage.
   Chat = require('iochat');                        // The chat server (iochat module).
+
+// --------------------------------------------------
+// Application configuration.
 
 // Session secret.
 // TODO: Put this in a build-specific config file that is not committed to the repository.
@@ -25,14 +39,13 @@ var express = require('express'),                  // This is an express applica
 var secret = "put me in a config file";
 
 // Configure which games are available.
-// Every game must have a corresponding file in
-// game_server/games/game_name/index.js which conforms to the iogame API.
-//
-// See full documentation at: TODO.
+// All games must conform to the 'Game object documentation', see game_server/index.js.
+// TODO: Add a wiki link.
 var games = [
   'tictactoe'
 ];
 
+// --------------------------------------------------
 // Express boilerplate.
 var app = express();
 var cookieParser = express.cookieParser(secret);
@@ -47,6 +60,7 @@ app.configure(function() {
   app.set('views', __dirname + '/views');
 
   // App global: Which template engine to use?
+  // EJS was chosen for its minimal DSL.
   app.set('view engine', 'ejs');
 
   // App middleware: Not sure what this is. TODO: What is it?
@@ -92,22 +106,24 @@ app.configure('development', function() {
 // Index - give this a better name. Index should not be called routes.index!
 app.get('/', routes.index);
 
-// Every function attached to the required session object is a POST route.
-// TODO: Not really a good idea.
-for (route in session) {
-  app.post('/session/' + route, session[route]);
+// Hook up any POST routes requested by session.js - put them under /session/routeName.
+for (var routePath in sessionRoutes.postRoutes) {
+  if (sessionRoute.postRoutes.hasOwnProperty(routePath)) {
+    app.post('/session/' + routePath, sessionRoute.postRoutes[routePath]);
+  }
 }
 
 // Start the express server.
-// TODO: Is this required?
-// TODO: What is the "express" server?
 var server = http.createServer(app).listen(app.get('port'), function() {
-  console.log("Express server listening on port " + app.get('port'));
+  console.log("node-socket-games listening on port " + app.get('port'));
 });
 
 // Create the chat server.
+// TODO: Rename to commandCenter.
 var chat = new Chat (server, sessionStore, cookieParser);
 
 // Create the game server, give it a handle to the chat server.
+// TODO: Rename to gameLobby.
+// TODO: Check that app and chat are really required by the lobby.
 var GameServer = require('./game_server');
 var gameServer = new GameServer(games, app, chat);
