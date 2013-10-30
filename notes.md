@@ -9,6 +9,7 @@ Style conventions
 * This: http://nodeguide.com/style.html Any consistent deviations let me know! Key points:
    * Variables and properties should use lower camel case capitalization.
 * Files should have a header like:
+
 ```
 //  Created:            TIMESTAMP
 //  Last Modified:      TIMESTAMP
@@ -23,6 +24,7 @@ Style conventions
 ```
 
 * Header dividers:
+
 ```javascript
 // --------------------------------------------------
 // Summary
@@ -30,6 +32,7 @@ Style conventions
 ```
 
 * Code section dividers.
+
 ```javascript
 // --------------------------------------------------
 // Emitters.
