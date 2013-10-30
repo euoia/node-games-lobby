@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Wed 30 Oct 2013 12:54:39 PM GMT
+//  Last Modified:      Wed 30 Oct 2013 03:40:49 PM GMT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -109,12 +109,12 @@ app.configure('development', function() {
 // Assign routes.
 
 // Use the lobby login as the landing page.
-app.get('/', lobby.login);
+app.get('/', lobbyRoutes.login);
 
 // Hook up any POST routes requested by session.js - put them under /session/routeName.
 for (var routePath in sessionRoutes.postRoutes) {
-  if (sessionRoute.postRoutes.hasOwnProperty(routePath)) {
-    app.post('/session/' + routePath, sessionRoute.postRoutes[routePath]);
+  if (sessionRoutes.postRoutes.hasOwnProperty(routePath)) {
+    app.post('/session/' + routePath, sessionRoutes.postRoutes[routePath]);
   }
 }
 
