@@ -8,6 +8,10 @@ Style conventions
 ----
 * This: http://nodeguide.com/style.html Any consistent deviations let me know! Key points:
    * Variables and properties should use lower camel case capitalization.
+* Additions:
+   * Unless a house-style for filenames already exists, words should be
+     separated with a hyphen. Examples: less-middleware, socket.io-client,
+     progress-bars.less etc.
 * Files should have a header like:
 
 ```
