@@ -7,7 +7,8 @@ var valid_usernames = [
   'james', 'bob'
 ];
 
-exports.login = function(req, res) {
+var login = exports.login = function(req, res) {
+  // TODO: Do a proper account lookup.
   if (_.contains(valid_usernames, req.body.username)) {
     req.session.username = req.body.username;
     Chat.initSession(req.session);
@@ -24,14 +25,14 @@ exports.login = function(req, res) {
 };
 
 // AJAX login request.
-exports.logout = function(req, res) {
+var logout = exports.logout = function(req, res) {
   req.session.destroy();
   res.send({
     result: 'ok'
   });
 };
 
-exports.check = function(req, res) {
+var check = exports.check = function(req, res) {
   if (req.session.username !== undefined) {
   console.log('check');
   console.log(req.session);
@@ -45,4 +46,11 @@ exports.check = function(req, res) {
       result: 'fail'
     });
   }
+};
+
+// Object mapping a path (that is, part of a URL path) to its function.
+exports.postRoutes = {
+  'login':    login,
+  'logout':   logout,
+  'check':    check
 };
