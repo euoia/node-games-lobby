@@ -1,5 +1,5 @@
 /*  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
- *  Last Modified:      Tue 29 Oct 2013 10:23:51 PM GMT
+ *  Last Modified:      Tue 29 Oct 2013 11:46:03 PM GMT
  *  Author:             James Pickard <james.pickard@gmail.com>
  *
  * The main application.
@@ -108,5 +108,6 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 // Create the chat server.
 var chat = new Chat (server, sessionStore, cookieParser);
 
+// Create the game server, give it a handle to the chat server.
 var GameServer = require('./game_server');
 var gameServer = new GameServer(games, app, chat);
