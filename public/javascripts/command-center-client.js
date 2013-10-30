@@ -1,0 +1,1 @@
+../../node_modules/command-center/client/command-center-client.js
