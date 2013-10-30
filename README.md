@@ -35,6 +35,9 @@ To be completed:
 * Wiki documentation, which explains which bits to modify.
 
 In the future maybe:
+* Use a sensible theme for the ecosystem (i.e. something other than trogons).
+    o Generic names are a bit bad and may conflict with existing NPM packages
+      (although note that command-center and game-lobby are free).
 * Handle games with more than 2 players.
 * Player and game sharing with other lobbies.
 * Better account management features.
