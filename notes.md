@@ -45,8 +45,10 @@ Chat.prototype.sendUserList = function(socket, roomName) {
 
 Coding conventions
 ----
-* Events are called events, not listeners. The arbitrary object that can be
-  sent with an event is referred to as eventData.
+* Events are called events, not listeners. Event handlers are event handlers,
+  not listeners. The event is the string, the event handler is the function.
+  The arbitrary object that can be sent with an event is referred to as
+  eventData.
 
 Little code patterns
 ----
