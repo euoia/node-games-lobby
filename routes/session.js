@@ -1,5 +1,5 @@
 var _ = require('underscore'),
-  Chat = require('iochat');
+  CommandCenter = require('command-center');
 
 // AJAX login request.
 // TODO: DB Lookup.
@@ -11,7 +11,7 @@ var login = exports.login = function(req, res) {
   // TODO: Do a proper account lookup.
   if (_.contains(valid_usernames, req.body.username)) {
     req.session.username = req.body.username;
-    Chat.initSession(req.session);
+    CommandCenter.initSession(req.session);
 
     res.send({
       result: 'ok'
