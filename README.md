@@ -1,12 +1,10 @@
-trogon-lobby
+node-games-lobby
 =================
 A matchmaking server and lobby for finding and playing multiplayer online games
 in a web browser using simple HTML and javascript.
 
-The games are called trogons because they conform to the simple 'trogon' game
-API.
-
-This is the trogon lobby.
+The games must be written in nodejs (or at least have a nodejs adapter) and
+conform to a simple API (TODO: link game API documentation).
 
 Features:
 * Chat across games with private messages, announcements, lobbies, public rooms.
@@ -34,9 +32,9 @@ To be completed:
 * Wiki documentation, which explains which bits to modify.
 
 In the future maybe:
-* Use a sensible theme for the ecosystem (i.e. something other than trogons).
-    o Generic names are a bit bad and may conflict with existing NPM packages
-      (although note that command-center and game-lobby are free).
+* Use a sensible theme for the ecosystem because generic names
+  ('node-games-lobby', 'node-command-center') are indistinctive, hard to
+  remember, and can only be used once.
 * Handle games with more than 2 players.
 * Player and game sharing with other lobbies.
 * Better account management features.
