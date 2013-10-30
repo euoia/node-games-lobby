@@ -1,7 +1,7 @@
 trogon-lobby
 =================
-It is a matchmaking server and lobby for finding and playing multiplayer online
-games in a web browser using simple HTML and javascript.
+A matchmaking server and lobby for finding and playing multiplayer online games
+in a web browser using simple HTML and javascript.
 
 The games are called trogons because they conform to the simple 'trogon' game
 API.
