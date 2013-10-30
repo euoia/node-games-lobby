@@ -1,16 +1,16 @@
 // Tightly coupled to the HTML.
-// Requires chat.js.
-// TODO: Rename this module to session.
+// TODO: Possibly rename this module to session.
 
 // Options:
 //   usernameInput
 //   loginForm
 //   logout
 
-define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
-  function Login(chat, options) {
+define (['jquery', 'underscore', 'command-center-client'], function($, _, CommandCenter) {
+
+  function Login(commandCenter, options) {
     var $this = this;
-    this.chat = chat;
+    this.commandCenter = commandCenter;
 
     // Add all options to this object.
     // Perhaps it would be better to do this explicitly?
@@ -43,8 +43,8 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
       }
     });
 
-    this.chat.addCommand('logout', this.logoutCmd.bind(this));
-    this.chat.addCommand('userList', this.refreshUserListCmd.bind(this));
+    this.commandCenter.addCommand('logout', this.logoutCmd.bind(this));
+    this.commandCenter.addCommand('userList', this.refreshUserListCmd.bind(this));
   }
 
   Login.prototype.addError = function(message) {
@@ -68,7 +68,7 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
       return false;
     }
 
-    this.chat.connect(username, roomName);
+    this.commandCenter.connect(username, roomName);
 
     // TODO: Move these out of here into the app callback.
     $('.login').hide();
@@ -116,12 +116,12 @@ define (['jquery', 'underscore', 'chat'], function($, _, Chat) {
   };
 
   Login.prototype.logoutCmd = function() {
-    this.chat.logout();
+    this.commandCenter.logout();
     this.doLogout();
   };
 
   Login.prototype.refreshUserListCmd = function() {
-    this.chat.refreshUserList();
+    this.commandCenter.refreshUserList();
   };
 
   return Login;

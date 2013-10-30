@@ -4,7 +4,7 @@
 define([], function() {
   // Pass in a instance of the command center.
   function GameServer (commandCenter) {
-    this.chat = chat;
+    this.commandCenter = commandCenter;
 
     // Commands.
     commandCenter.addCommand('listGames', function() { commandCenter.emit('listGames'); });
