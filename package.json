@@ -1,5 +1,5 @@
 {
-  "name": "iochat-express",
+  "name": "node-socket-games",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -14,7 +14,7 @@
     "connect-redis": "~1.4.5",
     "session.socket.io": "git://github.com/functioncallback/session.socket.io.git",
     "underscore": "~1.4.3",
-    "iochat": "git://github.com/euoia/node-iochat#master",
+    "command-center": "git://github.com/euoia/node-command-center#master",
     "uuid": "~1.4.1"
   }
 }
