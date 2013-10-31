@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 30 Oct 2013 03:41:57 PM GMT
+// Last Modified:      Thu 31 Oct 2013 12:06:47 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -16,6 +16,7 @@
 // TODO: Use eventData instead of simply data, to convey that it is sent by the event emitter.
 // TODO: Is roomName tacked onto the eventData? If so - that's a bit bad to a have a reserved key.
 // TODO: It would be good if the game code did not need to deal with: sockets, sessions, requests, responses.
+// TODO: Fix the name and filename of this module.
 // --------------------------------------------------
 // Limitations / Rules:
 // ----
@@ -36,7 +37,7 @@
 // ----
 // It is quite difficult to see how we could use a namespace like /tictactoe
 // and still route messages to the actual game object. An alternative design
-// uses a namespace of the game UUID, and adds the listeners when the game is
+// uses a namespace of the game ID, and adds the listeners when the game is
 // created. This should work - but how do we tear down the listeners when the
 // game is finished? Additionally - is there any significant overhead with
 // having this large number of namespaces? What will happen if we cannot
@@ -49,62 +50,36 @@
 // Your game object can do anything it likes. It may require any libraries it
 // likes. The object returned by require()'ing games/gameId must implement the
 // following methods:
-// TODO: Get rid of req and res in the actual game. The game can only go one of
-// several ways!
-// TODO: This is awful - the game should not have access to the gameServer
-// object. This function should be proxied through a gameServer function which
-// does its stuff.
 //
-//    Constructor(gameServer) -
-//      The constructor should set up a new game instance state. The game
-//      object will be instantiated when a new game is created. A reference to
-//      the gameServer object ought to be kept. (TODO: Get rid of this
-//      requirement).
+//    Constructor() -
+//      The constructor should set up the state of a new game.
+//    ----
+//    Game functions.
+//
+//    Game.getConfig(configName) -
+//      Return a configuration setting for the game. Must return sensible
+//      values where configName is: minPlayers, maxPlayers.
 //
 //    ----
-//    Match shared functions.
+//    Game instance methods.
 //
-//    play(gameServer, req, res) -
-//      Using the matchID from the URL this express handler should lookup the match, and if found initialise it.
-//      The game should check that the gameServer has the game (BAD!) and if so
-//      initialise the game state. If successful the HTTP response (probably an
-//      initial match state - see example views/games/tictactoe.js and
-//      public/javascripts/games/tictactoe.js.
-//
-//    getConfig(configName) -
-//      Return config settings for the game. Config object must have keys:
-//      minPlayers, maxPlayers.
-//
-//    TODO: Actually just have the constructor return an object with all required keys filled in, e.g:
-//      var tictactoe = {
-//        minimumPlayers: 2,
-//        maximumPlayers: 2,
-//        connectionEvent: this.connection.bind(this),
-//        playEvent: this.play.bind(this),
-//        events: {
-//          'select': this.select.bind(this)
-//        }
-//      }
-//
-//    ----
-//    Match instance methods.
-//
-//    prototype.connection(socket, session) -
+//    Game.prototype.connection(err, socket, session) -
 //      Called when a connection from the socket comes in. The game should
 //      store the sockets and sessions so that it is possible to emit events to
 //      all players.
 //
-//    prototype.getEventFunctions() -
-//      Return a object whose keys are event names and whose values are
-//      functions. The functions will be called when the events come in on the
-//      match namespace.
+//    Game.prototype.getRoutes() -
+//      Return a object whose keys are URL route verbs and whose values are
+//      route handler functions. The functions will be called when a request of
+//      the form /gameID/matchID/verb is made.
 //
-//
+//      As usual, the route handler functions must be of the form:
+//        function routeHandler(req, res)
 //
 
 var uuid = require ('uuid'),
   _ = require ('underscore'),
-  util = require('util'); // TODO: What is util? Sounds fishy...
+  util = require('util');
 
 // The GameServer object contains all the games available and all the matches
 // being played.
@@ -158,44 +133,39 @@ function GameServer (gameIDs, app, commandCenter) {
   //------------------------------------------------------
 
   //------------------------------------------------------
-  //  The list of enabled games (object keyed on game identifier).
+  //  The enabled games.
+  //  Object key: gameID
+  //  Object value: game object (see below).
   this.games = {};
-  // Access to the game objects themselves.
-  //    object key: game ID
-  //    object val: game object (see below).
-  //
-  // The game object is the result of require()'ing games/game ID. Further,
+
+  // The game object is the result of requiring games/game ID. Further,
   // the game object must implement certain methods. See game object documentation.
 
-  // Hook up all the games:
+  //------------------------------------------------------
+  // Sidebar
+  // -----
+  // We need to somehow catch all events that are being sent for this
+  // game, but forward them to the correct gameInstance. See example:
+  // http://socket.io/#how-to-use
+  // .of('/chat')
+  // .on('connection', function (socket) {
+  //
+  // Then in the client:
+  // var chat = io.connect('http://localhost/chat')
+  //------------------------------------------------------
+
+  // Hook up each game:
   // * Require the files.
-  // * Bind /gameID/matchID route to game_object.play.
+  // * Set up any routes required by gameInstance.getRoutes().
   for (var gameIDidx = 0; gameIDidx < gameIDs.length; gameIDidx += 1) {
+    var that = this;
     var gameID = gameIDs[gameIDidx];
 
-    //------------------------------------------------------
-    // Mysterious sidebar [2013-10-30 - not sure what this is about]
-    // -----
-    // We need to somehow catch all events that are being sent for this
-    // game type, but forward them to the correct instance object. Should that
-    // be managed by the GameServer? Probably. See example:
-    // http://socket.io/#how-to-use
-    // .of('/chat')
-    // .on('connection', function (socket) {
-    //
-    //
-    // Then in the client:
-    // var chat = io.connect('http://localhost/chat')
-    //------------------------------------------------------
+    // Require the game object.
+    var game = this.games[gameID] = require('./games/' + gameID);
 
-    // Require the object.
-    var game = require('./games/' + gameID);
-    this.games[gameID] = game;
-
-    // TODO: Validate the game object conforms to the required API.
-    // TODO: Do we really need access to app.get here? Can't a higher level
-    // take care of this?
-    app.get('/' + gameID + '/*', game.play.bind(this, this));
+    // The URL is made up of /gameID/matchID/action.
+    app.get('/' + gameID + '/*', this.gameRouteHandler.bind(this, gameID));
   }
 
 }
@@ -203,6 +173,53 @@ function GameServer (gameIDs, app, commandCenter) {
 // ----------------------
 // Helper functions.
 // ----------------------
+
+// This route handler is called whenever a request comes in of the:
+// form: /gameID/matchID/verb.
+//
+// It checks that the game, match, verb are valid and then hands over to the
+// game instance.
+GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
+  var matchID  = req.params[0];
+  var action   = req.params[1];
+  var match    = that.matches[matchID];
+
+  if (this.games[gameID] === undefined) {
+    console.error(util.format(
+      'game_server [gameID=%s matchID=%s action=%s] : error, matchID not found.',
+      gameID,
+      matchID,
+      action));
+
+    return res.end('Game not found.');
+  }
+
+  if (match === undefined) {
+    console.error(util.format(
+      'game_server [gameID=%s matchID=%s action=%s] : error, matchID not found.',
+      gameID,
+      matchID,
+      action));
+
+    return res.end('Match not found.');
+  }
+
+  // Check whether a route for this action exists in the game instance.
+  var routeHandler = match.gameInstance.getRoutes[action];
+
+  if (routeHandler === undefined) {
+    console.error(util.format(
+      'game_server [gameID=%s matchID=%s action=%s] : error, action not valid.',
+      gameID,
+      matchID,
+      action));
+
+    return res.end('Route not valid.');
+  }
+
+  // Finally, call the route handler function.
+  return routeHandler.apply(match, req, res);
+};
 
 // Return as an array the gameIDs of games that can be played.
 GameServer.prototype.getAvailableGames = function() {
@@ -265,44 +282,17 @@ GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
 // Launch a match - there are enough players.
 GameServer.prototype.launchMatch = function(socket, session, match) {
 
-  // Tell the client that it can launch the game and provide a url of the format:
-  // gameID/matchID for the client to redirect to.
-  //
-  // TODO: I don't really like emitting to the socket directly. We might want
-  // to intercept it at the chat layer. Is there a better way?
-  // TODO: Rename this event launchGame to lauchMatch - required client-side change.
-  // TODO: The games themselves could possibly override this if ever desired.
+  // Tell the lobby client that it can launch the game and provide a url of the
+  // format: gameID/matchID for the client to redirect to.
   socket.emit('launchMatch', {
     url: util.format('%s/%s', match.gameID, match.id)
   });
 
-  // Add a handler for the connection event when it comes in on the namespace
-  // of the match ID.
-  // TODO: How do namespaces work? How does the client specify the namespace?
-  // TODO: Is the 'connection' event special?
-  this.commandCenter.addNamespacedEventHandler(match.id, 'connection', function(err, socket, session) {
-    if (err) {
-      throw(err);
-    }
-
-    // Call the connection method in the game instance.
-    match.gameInstance.connection(socket, session);
-
-    // This is the magic bit.
-    var eventFunctions = match.gameInstance.getEventFunctions();
-
-    // Games can set up their own listeners for socket.io events that will
-    // passed directly to the game instance. This way the front-end can emit socket.io
-    // events and have the game instance respond.
-    for (var event in eventFunctions) {
-      if (eventFunctions.hasOwnProperty(event)) {
-        var eventFunction = eventFunctions[event];
-
-        socket.on(event, eventFunction.bind(match, socket, session));
-        console.log('Bound %s event for a %s game.', event, match.gameID, ev);
-      }
-    }
-  });
+  this.commandCenter.addNamespacedEventHandler(
+    match.id,
+    'connection',
+    match.connection
+  );
 };
 
 
