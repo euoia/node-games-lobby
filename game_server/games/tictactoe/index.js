@@ -1,20 +1,29 @@
-// Games and routes are identified by the directory in which they reside.
-// For example, the ID of this game is tictactoe - all routes will be prefixed with tictactoe.
-//
-// TODO: Resume.
+// Created:            Thu 31 Oct 2013 12:06:16 PM GMT
+// Last Modified:      Thu 31 Oct 2013 12:06:16 PM GMT
+// Author:             James Pickard <james.pickard@gmail.com>
+// --------------------------------------------------
+// Summary
+// ----
+// This is the example tictactoe game that comes with
+// https://github.com/euoia/node-games-lobby.
+// --------------------------------------------------
+// TODOs
+// ----
+// TODO: Handle reconnections, resuming the game.
 // TODO: Handle observers (non-players) in the connection event.
-// they'd be an observer.
+// TODO: Document the events emitted and received by this game.
 
 var util = require('util');
 
-function Tictactoe (gameServer) {
-  this.gameServer = gameServer;
-  this.players = {}; // Keyed on username.
+function Tictactoe () {
+  // Player collection. Key is username, value is player object.
+  // Player object has the keys: username, socket.
+  this.players = {};
 
   this.nextPlayer = null; // Username of player who's turn is next.
   this.playerUsernames = []; // Array of player usernames.
 
-  // Map board ownership.
+  // Map board ownership. Tiles are assigned the owner's username.
   this.board = {
     topLeft: null,
     topMiddle: null,
@@ -26,37 +35,106 @@ function Tictactoe (gameServer) {
     bottomMiddle: null,
     bottomRight: null
   };
+
+  // Socket handlers and routes.
+  // TODO: This might not work!
+  this.socketEventHandlers = {
+    'select': this.select
+  };
+
+  this.routes = {
+    'play': this.landingPage
+  };
+
+  // Configuration.
+  this.config = {
+    minPlayers: 2,
+    maxPlayers: 2
+  };
 }
 
-// ----------------------
-// Socket listener functions.
-// ----------------------
+// --------------------------------------------------
+// Express routes.
+
+// Express request route that loads the game page.
+Tictactoe.prototype.landingPage = function (req, res) {
+  var username = req.session.username;
+
+  // Add the player.
+  this.addPlayer({
+    username: username,
+    socket:   null
+  });
+
+  // Render the view.
+  console.log('%s loaded the tictactoe page.', username);
+  return res.render('games/tictactoe/index', { title: 'Chat' });
+};
+
+
+// --------------------------------------------------
+// Methods required by the game object API.
+
+// Game.getConfig(configName)
+// Return a game configuration item.
+Tictactoe.getConfig = function(configName) {
+  return this.config[configName];
+};
+
+// Game.prototype.connection(err, socket, session)
+// After the player loads the tictactoe landing page page, the client-side
+// JavaScript makes a socket.io connection to the game lobby with a socket.io
+// namespace of this matchID.
+Tictactoe.prototype.connection = function(err, socket, session) {
+  console.log('Tictactoe: Connection from %s.', session.username);
+  if (err) {
+    // TODO: What kind of errors could occur here?
+    throw err;
+  }
+
+  var player = this.players[session.username];
+  if (player === undefined) {
+    console.log('tictactoe game: Error: Socket connection without player loading game page.');
+    return;
+  }
+
+  player.socket = socket;
+
+  // Set up socket event handlers on this connected socket.
+  for (var event in this.socketEventHandlers) {
+    if (this.socketEventHandlers[event].hasOwnProperty(event)) {
+      var eventHandler = this.socketEventHandlers[event];
+      socket.on(event, eventHandler);
+      console.log('tictactoe game: Bound event %s for user %s.', event, player.username);
+    }
+  }
+
+  // If the game has 2 players we can start.
+  // TODO: Surely this won't work because we'll have 2 players as soon as the
+  // page is loaded (see addPlayer call)?
+  if (Object.keys(this.players).length === 2) {
+    this.start();
+  }
+
+};
+
+// Return the URL routes required by this game.
+Tictactoe.prototype.getRoutes = function() {
+  return this.routes;
+};
+
+// --------------------------------------------------
+// Socket helper methods.
+
+// Emit an event to all players.
 Tictactoe.prototype.emitAll = function (event, data) {
   for (var username in this.players) {
     this.players[username].socket.emit(event, data);
   }
 };
 
-Tictactoe.prototype.start = function () {
-  console.log('Tictactoe start');
-
-  // Send each player their own username.
-  for (var username in this.players) {
-    this.players[username].socket.emit('playerInfo', {username: username});
-  }
-
-  this.emitAll('start', {});
-
-  // Tell the players who's turn it is next.
-  this.playerUsernames = Object.keys(this.players);
-  this.nextPlayer = this.playerUsernames[Math.floor(Math.random() * 2)];
-  console.log('It is %s\'s turn.', this.nextPlayer);
-
-  this.emitAll('nextRound', {
-    nextPlayer: this.nextPlayer
-  });
-};
-
+// --------------------------------------------------
+// Socket event handlers.
 Tictactoe.prototype.select = function (socket, session, data) {
   var winResult;
   console.log('%s selected %s.', session.username, data.id);
@@ -93,14 +171,35 @@ Tictactoe.prototype.select = function (socket, session, data) {
 };
 
 // --------------------------------------------------
-// Helper functions
-//
+// Game play methods.
 Tictactoe.prototype.addPlayer = function(username) {
   this.players.push({
     username: username,
     socket:   null
   });
 };
+
+// Start the game.
+Tictactoe.prototype.start = function () {
+  console.log('Tictactoe start');
+
+  // Send each player their own username.
+  for (var username in this.players) {
+    this.players[username].socket.emit('playerInfo', {username: username});
+  }
+
+  this.emitAll('start', {});
+
+  // Tell the players who's turn it is next.
+  this.playerUsernames = Object.keys(this.players);
+  this.nextPlayer = this.playerUsernames[Math.floor(Math.random() * 2)];
+  console.log('It is %s\'s turn.', this.nextPlayer);
+
+  this.emitAll('nextRound', {
+    nextPlayer: this.nextPlayer
+  });
+};
+
 
 // Check for a win. Returns either:
 //   { win: false }
@@ -164,72 +263,5 @@ Tictactoe.prototype.isStalemate = function() {
     return true;
   }
 };
-
-// ----------------------
-// Must-implement API functions.
-// All functions in this section must be implemented by every game.
-// ----------------------
-
-// prototype.connection - Handle a socket connection from a session.
-// After the player loads the tictactoe landing page page, the client-side
-// JavaScript makes a socket.io connection to the game lobby with a socket.io
-// namespace[1] of this matchID.
-Tictactoe.prototype.connection = function(socket, session) {
-  console.log('Tictactoe connection from %s.', session.username);
-  this.players[session.username].socket = socket;
-
-  if (Object.keys(this.players).length === 2) {
-    this.start();
-  }
-};
-
-
-// Express request route that loads the game page.
-// TODO: Would be better if the game does not have access to the gameServer
-// object.
-Tictactoe.play = function (gameServer, req, res) {
-  // Extract the matchID from the URL. The URL is always of the form:
-  // gameID/matchID.
-  var matchID  = req.params[0];
-  var username = req.session.username;
-  var match    = gameServer.matches[matchID];
-
-  if (match === undefined) {
-    return res.end('Game not found.');
-  }
-
-  // Add the player.
-  match.gameInstance.addPlayer({
-    username: username,
-    socket:   null
-  });
-
-  // Render the view.
-  // TODO: res.render could possibly be confined to games/tictactoe.
-  // TODO: Do we really need the request and response here?
-  console.log('%s loaded the tictactoe page.', username);
-  res.render('games/tictactoe/index', { title: 'Chat' });
-};
-
-// Return an object which maps event name to function.
-Tictactoe.prototype.getSocketEvents = function() {
-  var eventFunctions = {
-    'select': this.select
-  };
-
-  return eventFunctions;
-};
-
-// Return game configuration. Must-have keys: minPlayers, maxPlayers.
-// TODO: Is this bad practice?
-Tictactoe.getConfig = function(configName) {
-  var config = {
-    minPlayers: 2,
-    maxPlayers: 2
-  };
-
-  return config[configName];
-};
-
 
 module.exports = Tictactoe;
