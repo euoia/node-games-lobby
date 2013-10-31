@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Thu 31 Oct 2013 12:06:16 PM GMT
+// Last Modified:      Thu 31 Oct 2013 01:39:36 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -14,6 +14,13 @@
 // TODO: Document the events emitted and received by this game.
 
 var util = require('util');
+
+// Game configuration.
+var config = {
+  minPlayers: 2,
+  maxPlayers: 2,
+  launchVerb: 'play'
+};
 
 function Tictactoe () {
   // Player collection. Key is username, value is player object.
@@ -45,12 +52,6 @@ function Tictactoe () {
   this.routes = {
     'play': this.landingPage
   };
-
-  // Configuration.
-  this.config = {
-    minPlayers: 2,
-    maxPlayers: 2
-  };
 }
 
 // --------------------------------------------------
@@ -61,13 +62,10 @@ Tictactoe.prototype.landingPage = function (req, res) {
   var username = req.session.username;
 
   // Add the player.
-  this.addPlayer({
-    username: username,
-    socket:   null
-  });
+  this.addPlayer(username);
 
   // Render the view.
-  console.log('%s loaded the tictactoe page.', username);
+  console.log('tictactoe: %s loaded the launch page.', username);
   return res.render('games/tictactoe/index', { title: 'Chat' });
 };
 
@@ -78,7 +76,7 @@ Tictactoe.prototype.landingPage = function (req, res) {
 // Game.getConfig(configName)
 // Return a game configuration item.
 Tictactoe.getConfig = function(configName) {
-  return this.config[configName];
+  return config[configName];
 };
 
 // Game.prototype.connection(err, socket, session)
@@ -87,6 +85,7 @@ Tictactoe.getConfig = function(configName) {
 // namespace of this matchID.
 Tictactoe.prototype.connection = function(err, socket, session) {
   console.log('Tictactoe: Connection from %s.', session.username);
+
   if (err) {
     // TODO: What kind of errors could occur here?
     throw err;
@@ -173,10 +172,10 @@ Tictactoe.prototype.select = function (socket, session, data) {
 // --------------------------------------------------
 // Game play methods.
 Tictactoe.prototype.addPlayer = function(username) {
-  this.players.push({
+  this.players[username] = {
     username: username,
     socket:   null
-  });
+  };
 };
 
 // Start the game.
