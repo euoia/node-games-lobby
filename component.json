@@ -6,6 +6,6 @@
     "socket.io-client": "~0.9.11",
     "requirejs": "~2.1.5",
     "underscore": "~1.4.4",
-    "node-iochat": "git://github.com/euoia/node-iochat.git"
+    "node-command-center": "git://github.com/euoia/node-command-center.git"
   }
 }
