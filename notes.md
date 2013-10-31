@@ -87,3 +87,7 @@ Is it bad to mix "singleton style" conventions (extending the Constructor) with
 there a good alternative?
 
 Is it bad that command-center-client.js contains a constructor CommandCenter and not CommandCenterClient?
+
+Should this application use the word "server" at all? Perhaps it should
+distinguish between the game lobby and the game server. Is it a game server?
+Could the game server(s) be a separate application?
