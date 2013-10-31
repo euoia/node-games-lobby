@@ -32,7 +32,7 @@ function Tictactoe (gameServer) {
 // Socket listener functions.
 // ----------------------
 Tictactoe.prototype.emitAll = function (event, data) {
-  for (username in this.players) {
+  for (var username in this.players) {
     this.players[username].socket.emit(event, data);
   }
 };
@@ -41,7 +41,7 @@ Tictactoe.prototype.start = function () {
   console.log('Tictactoe start');
 
   // Send each player their own username.
-  for (username in this.players) {
+  for (var username in this.players) {
     this.players[username].socket.emit('playerInfo', {username: username});
   }
 
@@ -112,35 +112,35 @@ Tictactoe.prototype.checkWin = function(username) {
   var b = this.board,
     u = username;
 
-  if (b['topLeft'] === u && b['topMiddle'] === u && b['topRight'] === u) {
+  if (b.topLeft === u && b.topMiddle === u && b.topRight === u) {
     return {win: true, type: 'row', val: 0};
   }
 
-  if (b['centerLeft'] === u && b['centerMiddle'] === u && b['centerRight'] === u) {
+  if (b.centerLeft === u && b.centerMiddle === u && b.centerRight === u) {
     return {win: true, type: 'row', val: 1};
   }
 
-  if (b['bottomLeft'] === u && b['bottomMiddle'] === u && b['bottomRight'] === u) {
+  if (b.bottomLeft === u && b.bottomMiddle === u && b.bottomRight === u) {
     return {win: true, type: 'row', val: 2};
   }
 
-  if (b['topLeft'] === u && b['centerLeft'] === u && b['bottomLeft'] === u) {
+  if (b.topLeft === u && b.centerLeft === u && b.bottomLeft === u) {
     return {win: true, type: 'col', val: 0};
   }
 
-  if (b['topMiddle'] === u && b['centerMiddle'] === u && b['bottomMiddle'] === u) {
+  if (b.topMiddle === u && b.centerMiddle === u && b.bottomMiddle === u) {
     return {win: true, type: 'col', val: 1};
   }
 
-  if (b['topMiddle'] === u && b['bottomMiddle'] === u && b['bottomMiddle'] === u) {
+  if (b.topMiddle === u && b.bottomMiddle === u && b.bottomMiddle === u) {
     return {win: true, type: 'col', val: 2};
   }
 
-  if (b['topLeft'] === u && b['centerMiddle'] === u && b['bottomRight'] === u) {
+  if (b.topLeft === u && b.centerMiddle === u && b.bottomRight === u) {
     return {win: true, type: 'diag', val: 0};
   }
 
-  if (b['bottomLeft'] === u && b['centerMiddle'] === u && b['topRight'] === u) {
+  if (b.bottomLeft === u && b.centerMiddle === u && b.topRight === u) {
     return {win: true, type: 'diag', val: 1};
   }
 
@@ -171,6 +171,9 @@ Tictactoe.prototype.isStalemate = function() {
 // ----------------------
 
 // prototype.connection - Handle a socket connection from a session.
+// After the player loads the tictactoe landing page page, the client-side
+// JavaScript makes a socket.io connection to the game lobby with a socket.io
+// namespace[1] of this matchID.
 Tictactoe.prototype.connection = function(socket, session) {
   console.log('Tictactoe connection from %s.', session.username);
   this.players[session.username].socket = socket;
@@ -182,19 +185,21 @@ Tictactoe.prototype.connection = function(socket, session) {
 
 
 // Express request route that loads the game page.
+// TODO: Would be better if the game does not have access to the gameServer
+// object.
 Tictactoe.play = function (gameServer, req, res) {
   // Extract the matchID from the URL. The URL is always of the form:
   // gameID/matchID.
-  var matchID = req.params[0];
+  var matchID  = req.params[0];
   var username = req.session.username;
+  var match    = gameServer.matches[matchID];
 
-  // TODO: Do not access gameserver.
-  if (gameServer.matches[matchID] === undefined) {
+  if (match === undefined) {
     return res.end('Game not found.');
   }
 
   // Add the player.
-  gameServer.matches[matchID].addPlayer({
+  match.gameInstance.addPlayer({
     username: username,
     socket:   null
   });
@@ -207,7 +212,7 @@ Tictactoe.play = function (gameServer, req, res) {
 };
 
 // Return an object which maps event name to function.
-Tictactoe.prototype.getEventFunctions = function() {
+Tictactoe.prototype.getSocketEvents = function() {
   var eventFunctions = {
     'select': this.select
   };
