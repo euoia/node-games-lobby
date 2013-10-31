@@ -16,5 +16,14 @@
     "underscore": "~1.4.3",
     "command-center": "git://github.com/euoia/node-command-center#master",
     "uuid": "~1.4.1"
+  },
+  "devDependencies": {
+    "mocha": "~1.5.0",
+    "should": "~1.2.0",
+    "superagent": "*",
+    "socket.io-client": "~0.9.13"
+  },
+  "scripts": {
+    "test": "cd test && mocha app.js"
   }
 }
