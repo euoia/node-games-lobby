@@ -24,14 +24,16 @@
 //             will be used.
 // --------------------------------------------------
 
-var express = require('express'),                  // This is an express application.
+var
+  http = require('http'),                          // Required for initialising express server.
+  path = require('path'),                          // Required for OS-independency (path.join).
+  express = require('express'),                    // This is an express application.
+  lessMiddleware = require('less-middleware'),     // CSS uses less, which is compiled on-the-fly.
+  RedisStore = require('connect-redis')(express),  // Used for session storage.
   lobbyRoutes = require('./routes/lobby'),         // Lobby-related routes.
   sessionRoutes = require('./routes/session'),     // Session-related routes.
-  http = require('http'),                          // See TODO below.
-  path = require('path'),                          // Required for OS-independency (path.join).
-  lessMiddleware = require('less-middleware'),     // CSS uses less, which is compiled on-the-fly.
-  RedisStore = require('connect-redis')(express),  // Used for express session storage.
-  CommandCenter = require('command-center');       // The command center module.
+  CommandCenter = require('command-center');       // The command center (jpickard) module.
+  
 
 // --------------------------------------------------
 // Application configuration.
