@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Wed 30 Oct 2013 03:40:49 PM GMT
+//  Last Modified:      Thu 31 Oct 2013 02:49:21 PM GMT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -33,7 +33,6 @@ var
   lobbyRoutes = require('./routes/lobby'),         // Lobby-related routes.
   sessionRoutes = require('./routes/session'),     // Session-related routes.
   CommandCenter = require('command-center');       // The command center (jpickard) module.
-  
 
 // --------------------------------------------------
 // Application configuration.
