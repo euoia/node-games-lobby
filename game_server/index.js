@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Thu 31 Oct 2013 12:06:47 PM GMT
+// Last Modified:      Thu 31 Oct 2013 01:34:19 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -58,7 +58,10 @@
 //
 //    Game.getConfig(configName) -
 //      Return a configuration setting for the game. Must return sensible
-//      values where configName is: minPlayers, maxPlayers.
+//      values where configName is: minPlayers, maxPlayers, launchVerb.
+//          minPlayers - the minimum number of players allowed for the game.
+//          maxPlayers - the maximum number of players allowed for the game.
+//          launchVerb - the URL verb that the client should redirect to.
 //
 //    ----
 //    Game instance methods.
@@ -158,14 +161,13 @@ function GameServer (gameIDs, app, commandCenter) {
   // * Require the files.
   // * Set up any routes required by gameInstance.getRoutes().
   for (var gameIDidx = 0; gameIDidx < gameIDs.length; gameIDidx += 1) {
-    var that = this;
     var gameID = gameIDs[gameIDidx];
 
     // Require the game object.
     var game = this.games[gameID] = require('./games/' + gameID);
 
     // The URL is made up of /gameID/matchID/action.
-    app.get('/' + gameID + '/*', this.gameRouteHandler.bind(this, gameID));
+    app.get('/' + gameID + '/*/*', this.gameRouteHandler.bind(this, gameID));
   }
 
 }
@@ -182,7 +184,7 @@ function GameServer (gameIDs, app, commandCenter) {
 GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
   var matchID  = req.params[0];
   var action   = req.params[1];
-  var match    = that.matches[matchID];
+  var match    = this.matches[matchID];
 
   if (this.games[gameID] === undefined) {
     console.error(util.format(
@@ -205,7 +207,8 @@ GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
   }
 
   // Check whether a route for this action exists in the game instance.
-  var routeHandler = match.gameInstance.getRoutes[action];
+  var matchRoutes = match.gameInstance.getRoutes();
+  var routeHandler = matchRoutes[action];
 
   if (routeHandler === undefined) {
     console.error(util.format(
@@ -218,7 +221,7 @@ GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
   }
 
   // Finally, call the route handler function.
-  return routeHandler.apply(match, req, res);
+  return routeHandler.call(match.gameInstance, req, res);
 };
 
 // Return as an array the gameIDs of games that can be played.
@@ -240,8 +243,8 @@ GameServer.prototype.match = function(matchUuid) {
 GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
   var $this = this;
 
-  // TODO: It's cumbersome to carry the room around. Perhaps we need an object
-  // that contains socket, session, AND room name?
+  // TODO: Perhaps the command center could remember the socket? Or at least
+  // provide lookup based on username.
   this.commandCenter.sendNotification(
     socket,
     util.format('You have joined %s\'s game of %s.', match.owner, match.gameID));
@@ -249,7 +252,6 @@ GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
   // Add the player to the array of usernames playing.
   match.playerUsernames.push(socket.username);
 
-  // TODO: Could this not be a generic method?
   if (match.playerUsernames.length === match.game.getConfig('minPlayers')) {
     match.state = 'PLAYING';
 
@@ -285,13 +287,17 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
   // Tell the lobby client that it can launch the game and provide a url of the
   // format: gameID/matchID for the client to redirect to.
   socket.emit('launchMatch', {
-    url: util.format('%s/%s', match.gameID, match.id)
+    url: util.format('%s/%s/%s', match.gameID, match.id, match.game.getConfig('launchVerb'))
   });
+
+  // TODO: Remove this debug logging.
+  console.log('launchMatch - binding connection socket event handler.');
+  console.log(util.inspect(match.gameInstance.connection));
 
   this.commandCenter.addNamespacedEventHandler(
     match.id,
     'connection',
-    match.connection
+    match.gameInstance.connection.bind(match.gameInstance)
   );
 };
 
