@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:25:48 AM GMT
-// Last Modified:      Thu 31 Oct 2013 01:07:04 AM GMT
+// Last Modified:      Thu 31 Oct 2013 01:29:25 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -25,9 +25,10 @@ requirejs.config({
 
 define(['jquery', 'underscore', 'socket.io'], function($, _, io) {
   function Tictactoe () {
-    this.matchID = location.pathname.match(/\/tictactoe\/(.*)/)[1];
+    var pathElements = location.pathname.match(/\/tictactoe\/(.*)\/(.*)/);
+    this.matchID = pathElements[1];
 
-    // Connect to the game lobby, with the matchID as the namespace.
+    // Connect to the game lobby, with the matchID as the socket.io namespace.
     // TODO: Try to find some documentation stating that this is how namespaces
     // are dealt with.
     this.socket = io.connect('http://localhost/' + this.matchID);
