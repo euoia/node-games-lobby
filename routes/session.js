@@ -1,3 +1,5 @@
+// TODO: Perhaps this module should be called Account?
+//
 var _ = require('underscore'),
   CommandCenter = require('command-center');
 
