@@ -36,7 +36,7 @@ describe('node-games-lobby', function() {
     };
 
     it('should be able to login with a good username', function(done) {
-      agent1.post('http://localhost:3000/session/login').send({
+      agent1.post(util.format('http://localhost:%s/session/login', serverPort)).send({
         username: goodAccount.username
       }).end(function(err, res) {
         assert.ifError(err);
@@ -48,7 +48,7 @@ describe('node-games-lobby', function() {
     });
 
     it('should fail to login with a bad username', function(done) {
-      agent2.post('http://localhost:3000/session/login').send({
+      agent2.post(util.format('http://localhost:%s/session/login', serverPort)).send({
         username: badAccount.username
       }).end(function(err, res) {
         assert.ifError(err);
