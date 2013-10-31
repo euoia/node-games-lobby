@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Thu 31 Oct 2013 01:34:19 PM GMT
+// Last Modified:      Thu 31 Oct 2013 04:41:04 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -7,8 +7,23 @@
 // The GameServer object contains all the games and all of the matches that are
 // in-progress.
 // --------------------------------------------------
+// Limitations / Rules:
+// ----
+//  1. A player (i.e. username) can only be waiting for one game at a time.
+// --------------------------------------------------
+// General notes
+// ----
+//  1. Errors. What to do? Throw an error? Yes for now. This means that a
+//     client could theoretically cause a server error by submitting bad data.
+//     That's fine for now.
+// --------------------------------------------------
 // TODOs
 // ----
+// TODO: Handle games with a variable number of players.
+// TODO: Since we are adding socket events with chat.addSocketEvent we could
+//       proxy that in order to log any incoming socket events before they are
+//       passed on.
+// TODO: Handle cancellations if a player leaves or tries to start another game.
 // TODO: Sort out match/game nomenclature.
 // TODO: Thoroughly rename chat to command center.
 // TODO: Fix handler/listener/event etc.
@@ -16,22 +31,7 @@
 // TODO: Use eventData instead of simply data, to convey that it is sent by the event emitter.
 // TODO: Is roomName tacked onto the eventData? If so - that's a bit bad to a have a reserved key.
 // TODO: It would be good if the game code did not need to deal with: sockets, sessions, requests, responses.
-// TODO: Fix the name and filename of this module.
-// --------------------------------------------------
-// Limitations / Rules:
-// ----
-//  1. A player (i.e. username) can only be waiting for one game at a time.
-// --------------------------------------------------
-// General notes:
-//  1. Errors. What to do? Throw an error? Yes for now. This means that a
-//     client could theoretically cause a server error by submitting bad data.
-//     That's fine for now.
-//
-// TODO: Handle games with a variable number of players.
-// TODO: Since we are adding socket events with chat.addSocketEvent we could
-//       proxy that in order to log any incoming socket events before they are
-//       passed on.
-// TODO: Handle cancellations if a player leaves or tries to start another game.
+// TODO: Fix the name and directory name of this module. Probably should be GameLobby game-lobby.js.
 // --------------------------------------------------
 // Regarding socket.io namespaces.
 // ----
