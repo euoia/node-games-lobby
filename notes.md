@@ -55,6 +55,25 @@ Coding conventions
   eventData.
   * The node documentation does call event handlers "listeners":
     http://nodejs.org/api/events.html.
+* Variable declarations are inconsistent throughout the codebase, sometimes we have:
+
+```
+  var matchID  = req.params[0];
+  var action   = req.params[1];
+  var match    = this.matches[matchID];
+```
+
+And other times we have:
+```
+  var waitingMatches = _.where(this.matches, {'state': 'WAITING'}),
+    formatStr,              // A formatter string.
+    msg,                    // The message to send back to the socket.
+    matchDescriptions = []; // Array of strings describing waiting matches.
+```
+
+Sometimes we have all variables declared at the start of a function (ala Crockford), othertimes we have variables declared as required.
+
+TODO: Make this more consistent.
 
 Little code patterns
 ----
@@ -91,3 +110,7 @@ Is it bad that command-center-client.js contains a constructor CommandCenter and
 Should this application use the word "server" at all? Perhaps it should
 distinguish between the game lobby and the game server. Is it a game server?
 Could the game server(s) be a separate application?
+
+Questions
+----
+1. When the browser makes a socket connection, how is this associated on the server side with the session? This is important for writing tests.
