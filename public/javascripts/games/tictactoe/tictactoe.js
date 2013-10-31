@@ -1,6 +1,12 @@
-// TODO: The number of instances of emitting a simply message indicates that we
-// could possibly do with a chat.addSimpleCommand function.
-//
+// Created:            Thu 31 Oct 2013 12:25:48 AM GMT
+// Last Modified:      Thu 31 Oct 2013 01:07:04 AM GMT
+// Author:             James Pickard <james.pickard@gmail.com>
+// --------------------------------------------------
+// Summary
+// ----
+// This is the client library for the example tictactoe game that comes with
+// https://github.com/euoia/node-games-lobby.
+// --------------------------------------------------
 requirejs.config({
   shim: {
     'jquery': {
@@ -18,11 +24,14 @@ requirejs.config({
 });
 
 define(['jquery', 'underscore', 'socket.io'], function($, _, io) {
-  // Pass in a instance of Chat (to be renamed Console - or something).
-  function Tictactoe (chat) {
-    this.gameUuid = location.pathname.match(/\/tictactoe\/(.*)/)[1];
+  function Tictactoe () {
+    this.matchID = location.pathname.match(/\/tictactoe\/(.*)/)[1];
 
-    this.socket = io.connect('http://localhost/' + this.gameUuid);
+    // Connect to the game lobby, with the matchID as the namespace.
+    // TODO: Try to find some documentation stating that this is how namespaces
+    // are dealt with.
+    this.socket = io.connect('http://localhost/' + this.matchID);
+
     this.socket.on('connect', this.connect.bind(this));
     this.socket.on('playerInfo', this.playerInfo.bind(this));
     this.socket.on('start', this.start.bind(this));
