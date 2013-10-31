@@ -6,6 +6,13 @@
 // ----
 // Basic tests for node-games-lobby.
 // --------------------------------------------------
+// TODOs
+// ----
+// TODO: I found it hard to find tutorials or guides for how to use superagent
+//       session cookies with socket.io. This is required because session data is
+//       retrieved even on socket.io requrests. If I get this working, I ought to
+//       write it up publicly.
+// --------------------------------------------------
 
 // Start the server on a test port.
 var serverPort = 4000;
