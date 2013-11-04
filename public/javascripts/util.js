@@ -1,1 +1,1 @@
-../../components/node-iochat/client/util.js
+../../components/node-command-center/client/util.js
