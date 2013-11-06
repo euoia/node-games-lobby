@@ -111,6 +111,12 @@ Should this application use the word "server" at all? Perhaps it should
 distinguish between the game lobby and the game server. Is it a game server?
 Could the game server(s) be a separate application?
 
+Given that adding request headers to the socket.io-client connect requires a fork and may not work over every transport, perhaps it might be better to authenticate the socket using a special "auth" message instead of relying on cookies.
+
+Perhaps it's possible to replace session.sockets.io with socket.io authorization as described [http://howtonode.org/socket-io-auth](http://howtonode.org/socket-io-auth).
+
+Consider writing a bot that randomly does things like joining rooms, creating matches, joining matches for load testing.
+
 Questions
 ----
 1. When the browser makes a socket connection, how is this associated on the server side with the session? This is important for writing tests.
