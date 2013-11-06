@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Thu 31 Oct 2013 04:41:04 PM GMT
+// Last Modified:      Wed 06 Nov 2013 12:11:17 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -308,7 +308,11 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
 
 // A socket has requested the list of games that may be created.
 GameServer.prototype.listGames = function(socket, session, eventData) {
-  // TODO: Update the command.
+  if (eventData.roomName === undefined) {
+    console.log('GameServer: Warning: listGames without eventData.roomName.');
+    return;
+  }
+
   this.commandCenter.sendNotification(
     socket,
     util.format('The following games are available: %s. ' +
