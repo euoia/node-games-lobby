@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Thu 31 Oct 2013 01:39:36 PM GMT
+// Last Modified:      Wed 06 Nov 2013 01:29:08 PM GMT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -59,6 +59,11 @@ function Tictactoe () {
 
 // Express request route that loads the game page.
 Tictactoe.prototype.landingPage = function (req, res) {
+  if (req.session.username === undefined) {
+    // TODO: This should probably be handled at a different layer.
+    return res.send(403, 'You must login before you can view games.');
+  }
+
   var username = req.session.username;
 
   // Add the player.
