@@ -16,6 +16,7 @@ To use this
 ----
 * Clone this repository.
 * Run `npm install`
+* Run `npm test` requires [mocha](http://visionmedia.github.io/mocha/) installed globally.
 * Look at the game documentation (TODO: link).
 * Look at the example tictactoe and hangman games.
 * Write your game to conform to the documented game API.
