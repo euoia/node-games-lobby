@@ -21,7 +21,7 @@
     "mocha": "~1.5.0",
     "should": "~1.2.0",
     "superagent": "*",
-    "socket.io-client": "~0.9.13"
+    "socket.io-client": "https://github.com/euoia/socket.io-client#0.9"
   },
   "scripts": {
     "test": "cd test && mocha app.js"
