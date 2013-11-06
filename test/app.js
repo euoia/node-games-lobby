@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 06:08:06 PM GMT
-//  Last Modified:      Wed 06 Nov 2013 12:19:03 PM GMT
+//  Last Modified:      Wed 06 Nov 2013 01:29:33 PM GMT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -114,8 +114,8 @@ describe('node-games-lobby:', function() {
       });
     });
 
-    // TODO: Attempt socket requests with badAgent1 and make sure they fail due
-    // to lack of authentication without crashing the node process.
+    // TODO: Attempt socket requests with badAgent1 and make sure they fail
+    // (without crashing the node process) due to lack of authentication .
 
     // Socket IO requests.
     describe('Start game:', function() {
@@ -215,16 +215,58 @@ describe('node-games-lobby:', function() {
           socket.emit('listMatches', {roomName: roomName});
         });
 
+        // Save the match URL for joining later.
+        var matchURL;
         it('The second player should be able to join the match', function(done) {
+          // Increase the timout to account for the 5-second start timer.
+          this.timeout(7000);
+
           socket.once('notification', function notificationReceived(eventData) {
             assert.equal(eventData.message,
                          util.format('You have joined %s&#39;s game of tictactoe.', goodAccount1.username));
-            done();
+
+            socket.on('launchMatch', function launchMatchReceived(eventData) {
+              assert.ok(eventData.url);
+              matchURL = eventData.url;
+              done();
+            });
           });
 
           socket.emit('joinMatch', {gameID: 'tictactoe'});
         });
+
+        it('Both players should be able to play the match by going to the match URL', function(done) {
+          console.log(util.format('Loading match URL %s', matchURL));
+
+          goodAgent1.get(
+            util.format('http://localhost:%s/%s', serverPort, matchURL)
+          ).end(function matchPageLoaded(err, res) {
+            assert.equal(res.statusCode, 200);
+            assert.ifError(err);
+
+            goodAgent2.get(
+              util.format('http://localhost:%s/%s', serverPort, matchURL)
+            ).end(function matchPageLoaded(err, res) {
+              assert.equal(res.statusCode, 200);
+              assert.ifError(err);
+              done();
+            });
+          });
+        });
+
+        it('A player that has not authenticated should not be able to load the match URL', function(done) {
+          badAgent1.get(
+            util.format('http://localhost:%s/%s', serverPort, matchURL)
+          ).end(function matchPageLoaded(err, res) {
+            assert.equal(res.statusCode, 403);
+            assert.ifError(err);
+            done();
+          });
+        });
       });
+
+      // TODO: Test with a player that has authenticated but is not part of the game.
+
     });
   });
 });
