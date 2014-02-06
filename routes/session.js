@@ -6,7 +6,7 @@ var _ = require('underscore'),
 // AJAX login request.
 // TODO: DB Lookup.
 var valid_usernames = [
-  'james', 'bob'
+  'james', 'bob', 'jeff'
 ];
 
 var login = exports.login = function(req, res) {

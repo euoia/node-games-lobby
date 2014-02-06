@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 06:08:06 PM GMT
-//  Last Modified:      Wed 06 Nov 2013 01:29:33 PM GMT
+//  Last Modified:      Wed 06 Nov 2013 04:46:16 PM GMT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -41,6 +41,12 @@ describe('node-games-lobby:', function() {
     // We need 2 players for a match.
     var goodAccount2 = {
       username: 'james'
+    };
+
+    // We need a third authenticated user to test what happens when a
+    // non-player tries to load a match page.
+    var goodAccount3 = {
+      username: 'jeff'
     };
 
     var goodAgent1 = superagent.agent();
@@ -96,6 +102,34 @@ describe('node-games-lobby:', function() {
 
       assert.ok(goodAgent2SessionCookie.name);
       assert.ok(goodAgent2SessionCookie.value);
+      done();
+    });
+
+    var goodAgent3 = superagent.agent();
+    it('A second player should be able to login', function(done) {
+      goodAgent3.post(util.format('http://localhost:%s/session/login', serverPort)).send({
+        username: goodAccount3.username
+      }).end(function(err, res) {
+        assert.ifError(err);
+        assert.equal(res.status, 200, 'expecting status 200');
+        assert.ok(res.body.result, 'response does not have a result');
+        assert.equal(res.body.result, 'ok', 'response result not right');
+        done();
+      });
+    });
+
+    // Save the session cookie for later.
+    var goodAgent3SessionCookie;
+    it('should have an goodAgent3 with cookies', function(done) {
+      goodAgent3SessionCookie = goodAgent3.jar.getCookie('connect.sid', {
+        'domain': util.format('%s:%s', 'localhost', '4000'),
+        'path': '/session/login',
+        'script': false,
+        'secure': false
+      });
+
+      assert.ok(goodAgent3SessionCookie.name);
+      assert.ok(goodAgent3SessionCookie.value);
       done();
     });
 
@@ -263,9 +297,19 @@ describe('node-games-lobby:', function() {
             done();
           });
         });
+
+        it('A player that has authenticated but is not part of the match should not be able to load the match URL', function(done) {
+          goodAgent3.get(
+            util.format('http://localhost:%s/%s', serverPort, matchURL)
+          ).end(function matchPageLoaded(err, res) {
+            assert.equal(res.statusCode, 403);
+            assert.ifError(err);
+            done();
+          });
+        });
       });
 
-      // TODO: Test with a player that has authenticated but is not part of the game.
+      // TODO: Test tictactoe.
 
     });
   });
