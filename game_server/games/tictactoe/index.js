@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Wed 06 Nov 2013 01:29:08 PM GMT
+// Last Modified:      Thu 06 Feb 2014 11:23:50 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -71,7 +71,7 @@ Tictactoe.prototype.landingPage = function (req, res) {
 
   // Render the view.
   console.log('tictactoe: %s loaded the launch page.', username);
-  return res.render('games/tictactoe/index', { title: 'Chat' });
+  return res.render('games/tictactoe/index', { title: 'Tictactoe' });
 };
 
 
@@ -104,11 +104,11 @@ Tictactoe.prototype.connection = function(err, socket, session) {
 
   player.socket = socket;
 
-  // Set up socket event handlers on this connected socket.
+  // Set up socket event handlers for this player.
   for (var event in this.socketEventHandlers) {
-    if (this.socketEventHandlers[event].hasOwnProperty(event)) {
+    if (this.socketEventHandlers.hasOwnProperty(event)) {
       var eventHandler = this.socketEventHandlers[event];
-      socket.on(event, eventHandler);
+      socket.on(event, eventHandler.bind(this, socket, session));
       console.log('tictactoe game: Bound event %s for user %s.', event, player.username);
     }
   }
@@ -139,22 +139,22 @@ Tictactoe.prototype.emitAll = function (event, data) {
 
 // --------------------------------------------------
 // Socket event handlers.
-Tictactoe.prototype.select = function (socket, session, data) {
+Tictactoe.prototype.select = function (socket, session, eventData) {
   var winResult;
-  console.log('%s selected %s.', session.username, data.id);
+  console.log('%s selected %s.', session.username, eventData.id);
 
   if (session.username !== this.nextPlayer) {
     return socket.emit('error', {msg: 'It is not your turn.'});
   }
 
-  if (this.board[data.id] !== null) {
+  if (this.board[eventData.id] !== null) {
     console.log('%s tried to cheat by making an invalid move!', session.username);
     return socket.emit('error', {msg: 'Not a valid move.'});
   }
 
-  this.board[data.id] = session.username;
+  this.board[eventData.id] = session.username;
 
-  this.emitAll('select', {player: session.username, id: data.id});
+  this.emitAll('select', {player: session.username, id: eventData.id});
 
   winResult = this.checkWin(session.username);
   if (winResult.win === true) {
