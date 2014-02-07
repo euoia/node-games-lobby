@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 05:11:15 PM EST
+// Last Modified:      Fri 07 Feb 2014 05:40:47 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -499,6 +499,15 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
     this.commandCenter.sendNotification(
       socket,
       util.format('That match has already started.'),
+      eventData.roomName);
+
+    return;
+  }
+
+  if (this.matches[eventData.matchID].owner === session.username) {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('Cannot join your own match.'),
       eventData.roomName);
 
     return;
