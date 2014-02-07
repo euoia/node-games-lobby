@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Thu 06 Feb 2014 05:37:16 PM EST
+// Last Modified:      Fri 07 Feb 2014 08:05:12 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -41,9 +41,9 @@ function Gorillas () {
   // The player has thrown their banana.
   // TODO: This could be cleaner.
   this.socketEventHandlers = {
+    'ready': this.ready,
     'throwBanana': this.throwBanana,
-    'endRound': this.endRound,
-    'ready': this.ready
+    'endRound': this.endRound
   };
 
   this.mapWidth = 80;
@@ -162,7 +162,7 @@ Gorillas.prototype.ready = function (socket, session, eventData) {
   }
 
   if (playersReady === 2) {
-    console.log("Both players are now ready.", playersReady);
+    console.log("Both players are now ready.");
     this.start();
   }
 };
@@ -170,51 +170,40 @@ Gorillas.prototype.ready = function (socket, session, eventData) {
 // Player throws a banana.
 Gorillas.prototype.throwBanana = function (socket, session, eventData) {
   var winResult;
-  console.log('%s throwBanana %s.', session.username, eventData.id);
+  console.log('%s throwBanana.', session.username);
   console.log("currentPlayer = %d", this.currentPlayer());
 
   var player = this.getPlayerByUsername(session.username);
 
-  if (player.playerIdx !== this.currentPlayer()) {
-    console.log("The wrong player threw the banana!");
-    return socket.emit('error', {msg: 'It is not your turn.'});
-  }
+  //if (player.playerIdx !== this.currentPlayer()) {
+  //  console.log("The wrong player threw the banana!");
+  //  return socket.emit('error', {msg: 'It is not your turn.'});
+  //}
 
   // TODO: Only need to emit to other player.
   this.players[this.otherPlayer()].socket.emit('bananaThrown', eventData);
-  winResult = this.enoughWins(player.playerIdx);
-
-  // TODO: The clients will already know - we just need to tell the game server.
-  if (winResult.win === true) {
-    // TODO: Report the win back to the server.
-  }
-
   this.nextTurn();
 };
 
 // Player ends the round (their banana hit the opponent).
-Gorillas.prototype.endRound = function (socket, session, eventData) {
-  var winResult;
-  console.log('%s throwBanana %s.', session.username, eventData.id);
+Gorillas.prototype.endRound = function (socket, session) {
+  console.log('%s endRound.', session.username);
   console.log("currentPlayer = %d", this.currentPlayer());
 
   var player = this.getPlayerByUsername(session.username);
 
-  if (player.playerIdx !== this.currentPlayer()) {
-    console.log("The wrong player threw the banana!");
-    return socket.emit('error', {msg: 'It is not your turn.'});
+  //if (player.playerIdx !== this.currentPlayer()) {
+  //  console.log("The wrong player tried to end the round!");
+  //  return socket.emit('error', {msg: 'It is not your turn.'});
+  //}
+
+  this.wins[this.currentPlayer()] += 1;
+  if (this.enoughWins(this.currentPlayer())) {
+    console.log("Player %d has enough wins, the match is over.", this.currentPlayer());
+    this.emitAll('matchEnded', {winner: this.currentPlayer()});
+  } else {
+    this.nextRound();
   }
-
-  // TODO: Only need to emit to other player.
-  this.players[this.otherPlayer()].socket.emit('bananaThrown', eventData);
-  winResult = this.enoughWins(player.playerIdx);
-
-  // TODO: The clients will already know - we just need to tell the game server.
-  if (winResult.win === true) {
-    // TODO: Report the win back to the server.
-  }
-
-  this.nextTurn();
 };
 
 // --------------------------------------------------
@@ -224,28 +213,18 @@ Gorillas.prototype.endRound = function (socket, session, eventData) {
 Gorillas.prototype.start = function () {
   console.log('Gorillas start');
 
-  if (this.buildings === null) {
-    this.buildings = this.generateBuildings();
-  }
-
-  if (this.gorillaBuildings === null) {
-    this.gorillaBuildings = this.generateGorillaBuildings();
-  }
 
   // Send each player the game details in the start event.
   for (var i = 0; i < this.players.length; i += 1) {
     var player = this.players[i];
 
-    player.socket.emit('start', {
-      startingPlayer: this.startingPlayer,
-      buildings: this.buildings,
-      gorillaBuildings: this.gorillaBuildings,
+    player.socket.emit('matchStarted', {
       playerIdx: player.playerIdx,
       usernames: [this.players[0].username, this.players[1].username]
     });
   }
 
-  this.nextTurn();
+  this.nextRound();
 };
 
 Gorillas.prototype.currentPlayer = function() {
@@ -323,5 +302,21 @@ Gorillas.prototype.generateGorillaBuildings = function() {
   return gorillaBuildings;
 };
 
+Gorillas.prototype.nextRound = function() {
+  this.startingPlayer = this.randomIntBetween(0, 1);
+  this.turnNumber = null;
+
+  this.buildings = this.generateBuildings();
+  this.gorillaBuildings = this.generateGorillaBuildings();
+
+  this.emitAll('roundStarted', {
+    startingPlayer: this.startingPlayer,
+    buildings: this.buildings,
+    gorillaBuildings: this.gorillaBuildings
+  });
+
+  this.nextTurn();
+  console.log("It is player %d's turn", this.currentPlayer());
+};
 
 module.exports = Gorillas;

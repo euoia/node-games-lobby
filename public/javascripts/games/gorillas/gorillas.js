@@ -1,4 +1,6 @@
-// All measurements are in terms of grid-squared and not pixels (except gridSize itself).
+// Each throw is a turn.
+// When a gorilla is hit, it's a new round.
+// When a player has enough wins, that's the end of the match.
 //
 function Gorillas(options) {
   // Size of a grid square in pixels.
@@ -99,24 +101,8 @@ function Gorillas(options) {
   imageLoader.done(function () {
     this.emit('ready');
 
-    console.log("Waiting to receive start from server");
-    this.listener.on('start', function (startData) {
-      console.log("Received start event", startData);
-
-      this.buildings = startData.buildings;
-      this.myPlayer = startData.playerIdx;
-      this.startingPlayer = startData.startingPlayer;
-      this.usernames = startData.usernames;
-
-      this.gorillaPositions = this.findGorillaPositions(startData.gorillaBuildings);
-
-      this.placeBuildings();
-      this.placeGorillas();
-      this.nextTurn();
-
-      this.listener.on('bananaThrown', this.bananaThrown.bind(this));
-    }.bind(this));
-
+    console.log("Waiting to receive matchStarted from server");
+    this.listener.on('matchStarted', this.matchStarted.bind(this));
   }.bind(this));
 }
 
@@ -402,9 +388,8 @@ Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, t
       this.gorillaPositions[this.otherPlayer()]);
 
     if (hasGorillaCollision) {
-      this.wins[this.currentPlayer()] += 1;
       console.log("Gorilla collision!");
-      this.listener.emit('endofround');
+      this.listener.emit('endRound');
       return;
     }
 
@@ -471,7 +456,8 @@ Gorillas.prototype.hasGorillaCollision = function(x, y, width, height, gorillaPo
       checkPoint(x + width, y + height)
     );
 
-    return collision;
+    return true;
+    //return collision;
 };
 
 Gorillas.prototype.nextTurn = function() {
@@ -498,7 +484,6 @@ Gorillas.prototype.otherPlayer = function() {
 };
 
 Gorillas.prototype.nextRound = function() {
-  this.startingPlayer = this.randomIntBetween(0, 1);
   this.turnNumber = null;
 
   this.initScreen();
@@ -508,8 +493,6 @@ Gorillas.prototype.nextRound = function() {
 
   console.log("It is player %d's turn", this.currentPlayer());
 };
-
-
 
 Gorillas.prototype.redrawUILayer = function() {
   this.uiContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
@@ -596,12 +579,38 @@ Gorillas.prototype.bananaThrown = function(eventData) {
       eventData.yVel));
 };
 
+Gorillas.prototype.matchStarted = function(eventData) {
+  this.usernames = eventData.usernames;
+  this.myPlayer = eventData.playerIdx;
+
+  console.log("Waiting to receive roundStarted from server");
+  this.listener.on('roundStarted', this.roundStarted.bind(this));
+  this.listener.on('bananaThrown', this.bananaThrown.bind(this));
+  this.listener.on('roundEnded', this.roundEnded.bind(this));
+  this.listener.on('matchEnded', this.matchEnded.bind(this));
+};
+
+Gorillas.prototype.roundStarted = function(eventData) {
+  console.log("Received roundStarted event", eventData);
+
+  this.buildings = eventData.buildings;
+  this.startingPlayer = eventData.startingPlayer;
+  this.gorillaPositions = this.findGorillaPositions(eventData.gorillaBuildings);
+
+  this.nextRound();
+
+  console.log("Waiting to receive an event from server");
+};
+
 Gorillas.prototype.roundEnded = function(eventData) {
-    // Check for end of game conditions.
-    if (this.enoughWins(this.currentPlayer())) {
-      this.endOfGame(this.currentPlayer());
-    } else {
-      this.nextRound();
-    }
+  console.log("Received roundEnded event", eventData);
+
+  console.log("currentPlayer=%d", this.currentPlayer);
+  this.wins[this.currentPlayer()] += 1;
+};
+
+Gorillas.prototype.matchEnded = function(eventData) {
+  console.log("Received matchEnded event", eventData);
+  this.endOfGame(eventData.winner);
 };
 
