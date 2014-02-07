@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 01:12:30 PM EST
+// Last Modified:      Fri 07 Feb 2014 05:11:15 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -83,7 +83,8 @@
 var uuid = require ('uuid'),
   _ = require ('underscore'),
   util = require('util'),
-  CommandCenter = require('command-center');
+  CommandCenter = require('command-center'),
+  EventEmitter = require('events').EventEmitter;
 
 // The GameServer object contains all the games available and all the matches
 // being played.
@@ -108,8 +109,8 @@ function GameServer (gameIDs, app, sessionSocketIO) {
   //  like game lists. If we didn't have this, we'd need to attach something to
   //  either the session or the socket object.
   //
-  this.commandCenter = new CommandCenter (sessionSocketIO);
-
+  this.eventEmitter = new EventEmitter();
+  this.commandCenter = new CommandCenter (sessionSocketIO, this.eventEmitter);
 
   // ----------------------
   // Command center commands.
@@ -120,6 +121,7 @@ function GameServer (gameIDs, app, sessionSocketIO) {
   this.commandCenter.addEventHandler('listGames', this.listGames.bind(this));
   this.commandCenter.addEventHandler('listMatches', this.listWaitingMatches.bind(this));
   this.commandCenter.addEventHandler('createMatch', this.createMatch.bind(this));
+  this.commandCenter.addEventHandler('joinGame', this.joinGame.bind(this));
   this.commandCenter.addEventHandler('joinMatch', this.joinMatch.bind(this));
 
   //------------------------------------------------------
@@ -189,6 +191,11 @@ function GameServer (gameIDs, app, sessionSocketIO) {
   });
 
   this.bindMatchConnectionHandler('g');
+
+  // Send the room match list to players when they enter a room.
+  this.eventEmitter.on('subscribe', function(eventData) {
+    this.sendRoomWaitingMatches(eventData.roomName);
+  }.bind(this));
 }
 
 // ----------------------
@@ -269,11 +276,15 @@ GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
     socket,
     util.format('You have joined %s\'s game of %s.', match.owner, match.gameID));
 
+
   // Add the player to the array of usernames playing.
   match.playerUsernames.push(socket.username);
 
   if (match.playerUsernames.length === match.game.getConfig('minPlayers')) {
     match.state = 'PLAYING';
+
+    // TODO: Remove the match from the list.
+
 
     var countdown = 5;
     var sendCountdown = function() {
@@ -382,9 +393,7 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
       Game.getConfig('minPlayers')),
       eventData.roomName);
 
-  // Send the room the updates match list.
-  // TODO: Limit to just pending matches from this room.
-  this.commandCenter.roomEmit(eventData.roomName, 'roomMatchList', this.matches);
+  this.sendRoomWaitingMatches(eventData.roomName);
 };
 
 
@@ -429,10 +438,10 @@ GameServer.prototype.listWaitingMatches = function(socket, session, eventData) {
 };
 
 
-// joinMatch event handler.
+// joinGame event handler.
 //
-// A socket has requested to join a WAITING game.
-GameServer.prototype.joinMatch = function(socket, session, eventData) {
+// A socket has requested to join any WAITING game.
+GameServer.prototype.joinGame = function(socket, session, eventData) {
   // Check the game exists.
   if (_.has(this.games, eventData.gameID) === false) {
     this.commandCenter.sendNotification(
@@ -462,7 +471,8 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
   if (matchToJoin === null) {
     this.commandCenter.sendNotification(
       socket,
-      util.format('Sorry, there there are no %s matches to join. You can start one using /createMatch <game name>.', eventData.gameID),
+      util.format('Sorry, there there are no %s matches to join. ' +
+        'You can start one using /createMatch <game name>.', eventData.gameID),
       eventData.roomName);
     return;
   }
@@ -470,8 +480,48 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
   this.addPlayerToMatch(socket, session, matchToJoin);
 };
 
+// joinMatch event handler.
+//
+// A socket has requested to join a specific match.
+GameServer.prototype.joinMatch = function(socket, session, eventData) {
+  console.log("Received joinMatch", eventData);
+
+  if (_.has(this.matches, eventData.matchID) === false) {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('No such match %s.', eventData.matchID),
+      eventData.roomName);
+
+    return;
+  }
+
+  if (this.matches[eventData.matchID].state !== 'WAITING') {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('That match has already started.'),
+      eventData.roomName);
+
+    return;
+  }
+
+  this.addPlayerToMatch(socket, session, this.matches[eventData.matchID]);
+};
+
+
 GameServer.prototype.instatiateMatch = function(matchData) {
   this.matches[matchData.id] = matchData;
+  console.log("Instantiated match match", this.matches);
+};
+
+GameServer.prototype.sendRoomWaitingMatches = function(roomName) {
+  // Sort WAITING matches based on created date.
+  var sortedWaitingMatches = _.where(
+    this.matches,
+    {'state': 'WAITING'}).sort(function(a,b) {
+      return a.created > b.created;
+    });
+
+  this.commandCenter.roomEmit(roomName, 'roomMatchList', sortedWaitingMatches);
 };
 
 module.exports = GameServer;

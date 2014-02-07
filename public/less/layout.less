@@ -13,7 +13,7 @@
 // http://www.colourlovers.com/palette/519944/Battle_Oceans
 @bodyColor:         #D8D8D8; // Title.
 
-@topColor:          #3F4253; // Filled with tears.
+@topColor:          #911d00; // Filled with tears.
 @leftColor:         @topColor;
 @rightColor:        @topColor;
 @bottomColor:       @topColor;
@@ -27,19 +27,23 @@
 
 @leftSidebarWidth: 200px;
 
-@rightSidebarWidth: 200px;
+@rightSidebarWidth: 300px;
 
-@contentHeadHeight: 80px;
+@contentHeadHeight: 60px;
 @contentFootHeight: 50px;
 
 // 3-column layout.
 // jpickard.
 // $Id: $
 // --------------------------------------------------
+@font-face { font-family: headerfont; src: url('/font/pakenham_rg.ttf'); }
+
 html,body {
 	color: @bodyColor;
+	background-image: url('/img/bg.png');
+	background-repeat: repeat-x;
 	padding: 20px;
-	font: 14px "Lucida Grande",Helvetica,Arial,sans-serif;
+	font: 18px headerfont, 'Arial Narrow', Tahoma;
 }
 
 #layout, #header, #main, #left-sidebar, #right, #right-sidebar, #content, #content-head, #content-foot, #content-body {

@@ -1,4 +1,6 @@
-input.user-input[type="text"]{vertical-align:top;width:100%;height:100px;border-radius:0px;border:0;font-size:30pt;}
+h1{font-size:48pt;}
+.usernameInputText{margin-bottom:1em;font-size:18px;}
+input.user-input[type="text"]{vertical-align:top;width:97%;height:30px;border-radius:0px;border:0;font-size:16pt;color:white;background-color:#ff1144;border:2px solid #cc0000;font:18pt headerfont,'Arial Narrow',Tahoma;letter-spacing:1px;}
 #message-entry-submit{display:none;}
 .messages{height:inherit;}
 .message{color:#f8fce7;}
@@ -6,6 +8,12 @@ input.user-input[type="text"]{vertical-align:top;width:100%;height:100px;border-
 .chat-box{height:inherit;}
 .chat-box ul{list-style:none;margin:0;padding:0;padding-left:10px;}
 .username{font-weight:bold;color:#fa1b70;}
-.roomName{margin-top:15px;color:inherit;}
-#roomUserList{list-style:none;margin:0;}
+.usernameList{font-size:18pt;}
+.roomNameTitle{margin-bottom:10px;font-size:24pt;text-align:center;}
+#roomUserList{list-style:none;margin:0;line-height:24pt;}
+#roomMatchListTitle{margin-bottom:10px;font-size:24pt;text-align:center;}
 #roomMatchList{list-style:none;margin:0;}
+.match{width:100%;text-align:center;}
+.matchContainer{margin:0 auto;width:240px;height:44px;color:#222;font-size:18pt;font-weight:bold;color:#dd11ff;text-shadow:-2px -2px 5px #000000;background:#0000ff;padding:2px;margin-bottom:8px;border:1px solid rgba(0, 0, 0, 0.05);box-shadow:inset 0 2px 4px rgba(255, 255, 255, 0.7),inset 0 -4px 4px rgba(0, 0, 0, 0.3);}
+.gameIcon{width:40px;height:40px;float:left;margin-right:20px;margin-top:2px;margin-left:2px;}
+.matchText{margin-top:2px;width:100%;}

@@ -42,7 +42,7 @@
 				<div id="content-head">
 					<h1><%= title %></h1>
 					<!--<p>Welcome to <%= title %>.&nbsp;-->
-					<a id="logout" class="chatting" href="#">log out</a></p>
+					<!-- <a id="logout" class="chatting" href="#">log out</a></p> -->
 				</div>
 
 				<div id="content-body">
@@ -58,10 +58,10 @@
 					<div class="login">
 						<form id="login">
 							<div id="enterUsernameBox">
-								<span>Enter your username:</span>
-								<input type="text" id="usernameInput" />
-								<input type="text" id="roomName" value="defaultRoom" />
-								<input type="submit" class="btn btn-primary" />
+								<div class="usernameInputText">Choose a username</div>
+								<input type="text" id="usernameInput" /><br />
+								<input type="hidden" id="roomName" value="gorilla Chat" />
+								<input type="submit" class="btn btn-warning" value="Go-rilla!" />
 							</div>
 							<div id="enterUsernameErrorBox">&nbsp;</div>
 						</form>
