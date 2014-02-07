@@ -1,0 +1,15 @@
+.screen {
+	background-color: blue;
+}
+
+.building {
+	background-color: grey;
+	border-left: 1px solid blue;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Press Start 2P'), local('PressStart2P-Regular'), url('font/Press+Start+2P.woff');
+}

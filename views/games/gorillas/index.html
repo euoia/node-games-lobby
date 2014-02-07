@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Gorillas first map prototype</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+		<script src="/javascripts/games/gorillas/jquery-2.1.0.js"></script>
+		<script src="/javascripts/games/gorillas/gorillas.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/javascripts/games/gorillas/imageLoader.js" type="text/javascript" charset="utf-8"></script>
+
+		<!-- Added for networking -->
+		<script src="/javascripts/socket.io.js" type="text/javascript" charset="utf-8"></script>
+
+        <link rel="stylesheet" href="/stylesheets/games/gorillas/normalize.min.css">
+        <link rel="stylesheet" href="/stylesheets/games/gorillas/main.css">
+        <link rel="stylesheet" href="/stylesheets/games/gorillas/gorillas.css">
+
+		<script type="text/javascript" charset="utf-8">
+			var gorillas;
+
+			$(window).load (function () {
+				var pathElements = location.pathname.match(/\/gorillas\/(.*)\/(.*)/);
+				var matchID = pathElements[1];
+				var socket = io.connect('http://localhost/' + matchID);
+
+				socket.on('connect', function() {
+					gorillas = new Gorillas({
+						mapWidth: 80,
+						mapHeight: 50,
+						screen: 'gorillas',
+						listener: socket
+					});
+				});
+			});
+		</script>
+    </head>
+    <body>
+		<!--  TODO: Dynamically add the canvas element. -->
+		<div id="gorillas"><canvas id="c"></canvas><canvas id="ui"></canvas><canvas id="banana"></canvas></div>
+	</body>
+</html>

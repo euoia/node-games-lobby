@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 06 Nov 2013 12:11:17 PM GMT
+// Last Modified:      Thu 06 Feb 2014 02:39:09 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -170,6 +170,22 @@ function GameServer (gameIDs, app, commandCenter) {
     app.get('/' + gameID + '/*/*', this.gameRouteHandler.bind(this, gameID));
   }
 
+  // Testing - start a gorillas match.
+  var gameClass        = this.games.gorillas;
+  var gameInstance     = new gameClass(this);
+
+  this.instatiateMatch ({
+    id:              'g',
+    owner:           'james',
+    game:            gameClass,
+    gameInstance:    gameInstance,
+    gameID:          'gorillas',
+    state:           'PLAYING',
+    created:         Date.now(),
+    playerUsernames: ['james', 'bob']
+  });
+
+  this.bindMatchConnectionHandler('g');
 }
 
 // ----------------------
@@ -203,6 +219,7 @@ GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
       matchID,
       action));
 
+    console.log(this.matches);
     return res.end('Match not found.');
   }
 
@@ -290,14 +307,18 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
     url: util.format('%s/%s/%s', match.gameID, match.id, match.game.getConfig('launchVerb'))
   });
 
-  // TODO: Remove this debug logging.
-  console.log('launchMatch - binding connection socket event handler.');
-  console.log(util.inspect(match.gameInstance.connection));
+  this.bindMatchConnectionHandler(match.id);
+};
 
+GameServer.prototype.bindMatchConnectionHandler = function(matchID) {
+  console.log('Binding match socket.io connection handler for matchID=%s', matchID);
+
+  // Add the socket.io namespaced listener, call gameInstance.connection but
+  // ensure 'this' is bound to the gameInstance object.
   this.commandCenter.addNamespacedEventHandler(
-    match.id,
+    matchID,
     'connection',
-    match.gameInstance.connection.bind(match.gameInstance)
+    this.matches[matchID].gameInstance.connection.bind(this.matches[matchID].gameInstance)
   );
 };
 
@@ -339,7 +360,7 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
   var gameInstance     = new Game(this);
 
   // Instantiate the match.
-  var match = this.matches[matchID] = {
+  this.instatiateMatch ({
     id:              matchID,
     owner:           socket.username,
     game:            Game,
@@ -348,7 +369,7 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
     state:           'WAITING',
     created:         Date.now(),
     playerUsernames: [socket.username]
-  };
+  });
 
   // Tell the requestor that the game was created.
   this.commandCenter.sendNotification(
@@ -440,6 +461,10 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
   }
 
   this.addPlayerToMatch(socket, session, matchToJoin);
+};
+
+GameServer.prototype.instatiateMatch = function(matchData) {
+  this.matches[matchData.id] = matchData;
 };
 
 module.exports = GameServer;

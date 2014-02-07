@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Thu 31 Oct 2013 02:49:21 PM GMT
+//  Last Modified:      Thu 06 Feb 2014 01:33:57 PM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -17,6 +17,8 @@
 // TODO: Consider adding a config object to hold the games list.
 // TODO: Consider adding a routing manager to manage (filter, log) routes set
 //       up by modules and games.
+// TODO: It would be prerable if all of a games public assets could reside
+//       within a single directory.
 // --------------------------------------------------
 // Environment variables
 // ----
@@ -46,7 +48,8 @@ var secret = "put me in a config file";
 // All games must conform to the 'Game object documentation', see game_server/index.js.
 // TODO: Add a wiki link.
 var games = [
-  'tictactoe'
+  'tictactoe',
+  'gorillas'
 ];
 
 // --------------------------------------------------
@@ -66,6 +69,8 @@ app.configure(function() {
   // App global: Which template engine to use?
   // EJS was chosen for its minimal DSL.
   app.set('view engine', 'ejs');
+
+  app.engine('html', require('ejs').renderFile);
 
   // App middleware: Not sure what this is. TODO: What is it?
   app.use(express.favicon());
