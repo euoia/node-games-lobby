@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 10:27:07 AM EST
+// Last Modified:      Fri 07 Feb 2014 11:39:21 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -171,13 +171,13 @@ function GameServer (gameIDs, app, commandCenter) {
   }
 
   // Testing - start a gorillas match.
-  var gameOb          = this.games.gorillas;
+  var gameObj         = this.games.gorillas;
   var gameInstance    = new gameObj(this);
 
   this.instatiateMatch ({
     id:              'g',
     owner:           'james',
-    game:            gameClass,
+    game:            gameObj,
     gameInstance:    gameInstance,
     gameID:          'gorillas',
     state:           'PLAYING',
@@ -350,7 +350,7 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
 
   // Check the game name is one of the available games.
   if (_.has(this.games, eventData.gameID) === false) {
-    this.commandCenter.sendNotification(socket, util.format('No such game %s.', eventData.gameID), data.roomName);
+    this.commandCenter.sendNotification(socket, util.format('No such game %s.', eventData.gameID), eventData.roomName);
     return;
   }
 
@@ -375,9 +375,12 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
   this.commandCenter.sendNotification(
     socket,
     util.format('Created match %s. Waiting for %s players.',
-                eventData.gameID,
-                Game.getConfig('minPlayers')),
-    eventData.roomName);
+      eventData.gameID,
+      Game.getConfig('minPlayers')),
+      eventData.roomName);
+
+  // Send the room the updates match list.
+  this.commandCenter.roomEmit(eventData.roomName, 'matchList', this.matches);
 };
 
 
