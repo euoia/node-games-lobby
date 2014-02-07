@@ -328,15 +328,22 @@ Gorillas.prototype.mouseup = function(
     y: this.gorillaPositions[this.currentPlayer()].y - 50
   };
 
-  // TODO: If the exit point is inside the gorilla's box, don't throw.
-  var currTime = window.performance.now();
-  window.requestAnimationFrame(this.animateBanana.bind(this, currTime, launchPoint, xVel, yVel));
+  this.throwBanana(launchPoint, xVel, yVel);
 
   this.listener.emit('throwBanana', {
     launchPoint: launchPoint,
     xVel: xVel,
     yVel: yVel
   });
+};
+
+Gorillas.prototype.throwBanana = function(launchPoint, xVel, yVel) {
+  this.animating = $.Deferred();
+
+  var currTime = window.performance.now();
+
+  window.requestAnimationFrame(
+    this.animateBanana.bind(this, currTime, launchPoint, xVel, yVel));
 };
 
 Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, time) {
@@ -359,6 +366,7 @@ Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, t
   if (xpos > this.toPixels(this.mapWidth) || xpos < 0) {
     console.log("out of bounds");
     this.nextTurn();
+    this.animating.resolve();
     return;
   }
 
@@ -393,12 +401,13 @@ Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, t
     ) {
       console.log("Gorilla collision!");
       this.listener.emit('endRound');
+      this.animating.resolve();
       return;
     }
 
     this.nextTurn();
-
     this.context.drawImage(this.explosionImg, xpos, ypos);
+    this.animating.resolve();
     return;
   }
 
@@ -413,8 +422,8 @@ Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, t
   } else {
     console.log("timeout");
     this.nextTurn();
+    this.animating.resolve();
   }
-
 };
 
 // Returns true if the point (with properties x and y) is inside the box.
@@ -565,15 +574,10 @@ Gorillas.prototype.emit = function(eventName, eventData) {
 };
 
 Gorillas.prototype.bananaThrown = function(eventData) {
-  // TODO: If the exit point is inside the gorilla's box, don't throw.
-  var currTime = window.performance.now();
-  window.requestAnimationFrame(
-    this.animateBanana.bind(
-      this,
-      currTime,
+  this.throwBanana(
       eventData.launchPoint,
       eventData.xVel,
-      eventData.yVel));
+      eventData.yVel);
 };
 
 Gorillas.prototype.matchStarted = function(eventData) {
@@ -590,24 +594,30 @@ Gorillas.prototype.matchStarted = function(eventData) {
 Gorillas.prototype.roundStarted = function(eventData) {
   console.log("Received roundStarted event", eventData);
 
-  this.buildings = eventData.buildings;
-  this.startingPlayer = eventData.startingPlayer;
-  this.gorillaPositions = this.findGorillaPositions(eventData.gorillaBuildings);
+  $.when(this.animating).then(function() {
+    this.buildings = eventData.buildings;
+    this.startingPlayer = eventData.startingPlayer;
+    this.gorillaPositions = this.findGorillaPositions(eventData.gorillaBuildings);
 
-  this.nextRound();
+    this.nextRound();
 
-  console.log("Waiting to receive an event from server");
+    console.log("Waiting to receive an event from server");
+  }.bind(this));
 };
 
 Gorillas.prototype.roundEnded = function(eventData) {
   console.log("Received roundEnded event", eventData);
 
-  console.log("currentPlayer=%d", this.currentPlayer);
-  this.wins[this.currentPlayer()] += 1;
+  // Need to defer this until after animations have finished.
+  $.when(this.animating).then( function() {
+    this.wins[this.currentPlayer()] += 1;
+  }.bind(this));
 };
 
 Gorillas.prototype.matchEnded = function(eventData) {
   console.log("Received matchEnded event", eventData);
-  this.endOfGame(eventData.winner);
+  $.when(this.animating).then( function() {
+    this.endOfGame(eventData.winner);
+  }.bind(this));
 };
 
