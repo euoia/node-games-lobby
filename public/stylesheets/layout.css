@@ -1,90 +1,12 @@
-html,
-body {
-  color: #d8d8d8;
-  padding: 20px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-#layout,
-#header,
-#main,
-#left-sidebar,
-#right,
-#right-sidebar,
-#content,
-#content-head,
-#content-foot,
-#content-body {
-  position: absolute;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-#layout {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-#header {
-  background-color: #3f4253;
-  top: 0;
-  right: 0;
-  height: 10px;
-  left: 0;
-}
-#main {
-  top: 10px;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-#left-sidebar {
-  background-color: #3f4253;
-  top: 0;
-  width: 200px;
-  bottom: 0;
-  left: 0;
-  padding-left: 10px;
-}
-#right {
-  background-color: #3f4253;
-  top: 0;
-  width: 200px;
-  right: 0;
-  bottom: 0;
-}
-#right-sidebar {
-  top: 0;
-  width: 200px;
-  right: 0;
-  bottom: 0;
-}
-#content {
-  background-color: #3f4253;
-  top: 0;
-  bottom: 0;
-  left: 200px;
-  right: 200px;
-}
-#content-head {
-  background-color: #3f4253;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-}
-#content-body {
-  background-color: #3f4253;
-  top: 80px;
-  bottom: 50px;
-  left: 0;
-  right: 0;
-}
-#content-foot {
-  background-color: #3f4253;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-}
+html,body{color:#d8d8d8;padding:20px;font:14px "Lucida Grande",Helvetica,Arial,sans-serif;}
+#layout,#header,#main,#left-sidebar,#right,#right-sidebar,#content,#content-head,#content-foot,#content-body{position:absolute;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;overflow:hidden;}
+#layout{top:0;right:0;bottom:0;left:0;}
+#header{background-color:#3f4253;top:0;right:0;height:10px;left:0;}
+#main{top:10px;right:0;bottom:0;left:0;}
+#left-sidebar{background-color:#3f4253;top:0;width:200px;bottom:0;left:0;padding-left:10px;}
+#right{background-color:#3f4253;top:0;width:200px;right:0;bottom:0;}
+#right-sidebar{top:0;width:200px;right:0;bottom:0;}
+#content{background-color:#3f4253;top:0;bottom:0;left:200px;right:200px;}
+#content-head{background-color:#3f4253;top:0;left:0;right:0;height:80px;}
+#content-body{background-color:#3f4253;top:80px;bottom:50px;left:0;right:0;}
+#content-foot{background-color:#3f4253;bottom:0;left:0;right:0;height:50px;}

@@ -20,7 +20,8 @@ define([
 
     $(document).ready(function() {
       var commandCenter = new CommandCenter({
-        userListDiv: '#left-sidebar',
+        roomUserListDiv: '#left-sidebar',
+        roomMatchListDiv: '#right-sidebar',
         messagesUl: '#chat-room .chat-box ul',
         messageScroll: '#content-body',
         messageEntryForm: '#message-entry-form',

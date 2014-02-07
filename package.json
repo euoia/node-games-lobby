@@ -12,7 +12,7 @@
     "socket.io": "~0.9.13",
     "less-middleware": "~0.1.9",
     "connect-redis": "~1.4.5",
-    "session.socket.io": "git://github.com/functioncallback/session.socket.io.git",
+    "session.socket.io": "git://github.com/euoia/session.socket.io.git",
     "underscore": "~1.4.3",
     "command-center": "git://github.com/euoia/node-command-center#master",
     "uuid": "~1.4.1"

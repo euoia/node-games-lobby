@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Thu 06 Feb 2014 01:33:57 PM EST
+//  Last Modified:      Fri 07 Feb 2014 01:27:48 PM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -34,7 +34,8 @@ var
   RedisStore = require('connect-redis')(express),  // Used for session storage.
   lobbyRoutes = require('./routes/lobby'),         // Lobby-related routes.
   sessionRoutes = require('./routes/session'),     // Session-related routes.
-  CommandCenter = require('command-center');       // The command center (jpickard) module.
+  Socketio = require('socket.io'),
+  SessionSocketIO = require('session.socket.io');
 
 // --------------------------------------------------
 // Application configuration.
@@ -95,8 +96,13 @@ app.configure(function() {
 
   app.use(app.router);
 
+  // https://github.com/emberfeather/less.js-middleware
   app.use(lessMiddleware({
-    src: __dirname + '/../public',
+    prefix: '/stylesheets',
+    src: __dirname + '/public/less',
+    dest: __dirname + '/public/stylesheets',
+    force: true,
+    debug: true,
     compress: true
   }));
 
@@ -129,9 +135,9 @@ var server = http.createServer(app).listen(app.get('port'), function() {
   console.log("node-socket-games listening on port " + app.get('port'));
 });
 
-// Create the chat server.
-// TODO: Rename to commandCenter.
-var commandCenter = new CommandCenter (server, sessionStore, cookieParser);
+// Create the socket.io server.
+var socketio = Socketio.listen(server);
+var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 
 // Create the game server, give it a handle to the express application and command center.
 // The handle to the command center is required so that it can add socket.io event listeners.
@@ -140,4 +146,4 @@ var commandCenter = new CommandCenter (server, sessionStore, cookieParser);
 // TODO: Rename to gameLobby.
 // TODO: Check that app and chat are really required by the lobby.
 var GameServer = require('./game_server');
-var gameServer = new GameServer(games, app, commandCenter);
+var gameServer = new GameServer(games, app, sessionSocketIO);

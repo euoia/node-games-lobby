@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Fri 07 Feb 2014 08:17:28 AM EST
+// Last Modified:      Fri 07 Feb 2014 10:07:23 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -12,8 +12,6 @@
 // TODO: Handle reconnections, resuming the game.
 // TODO: Handle observers (non-players) in the connection event.
 // TODO: Document the events emitted and received by this game.
-
-var util = require('util');
 
 function Gorillas () {
   // Player array.
@@ -256,7 +254,6 @@ Gorillas.prototype.nextTurn = function() {
 
 // --------------------------------------------------
 // Non-network methods.
-
 Gorillas.prototype.generateBuildings = function() {
   var xPos = 0;
   var width,

@@ -105,18 +105,48 @@ Is it bad to mix "singleton style" conventions (extending the Constructor) with
 "class style" conventions (extending the prototype) in the same module? Is
 there a good alternative?
 
-Is it bad that command-center-client.js contains a constructor CommandCenter and not CommandCenterClient?
+Is it bad that command-center-client.js contains a constructor CommandCenter
+and not CommandCenterClient?
 
 Should this application use the word "server" at all? Perhaps it should
 distinguish between the game lobby and the game server. Is it a game server?
 Could the game server(s) be a separate application?
 
-Given that adding request headers to the socket.io-client connect requires a fork and may not work over every transport, perhaps it might be better to authenticate the socket using a special "auth" message instead of relying on cookies.
+Given that adding request headers to the socket.io-client connect requires a
+fork and may not work over every transport, perhaps it might be better to
+authenticate the socket using a special "auth" message instead of relying on
+cookies.
 
-Perhaps it's possible to replace session.sockets.io with socket.io authorization as described [http://howtonode.org/socket-io-auth](http://howtonode.org/socket-io-auth).
+Perhaps it's possible to replace session.sockets.io with socket.io
+authorization as described
+[http://howtonode.org/socket-io-auth](http://howtonode.org/socket-io-auth).
 
-Consider writing a bot that randomly does things like joining rooms, creating matches, joining matches for load testing.
+Consider writing a bot that randomly does things like joining rooms, creating
+matches, joining matches for load testing.
 
 Questions
 ----
-1. When the browser makes a socket connection, how is this associated on the server side with the session? This is important for writing tests.
+1. When the browser makes a socket connection, how is this associated on the
+   server side with the session? This is important for writing tests.
+
+
+TODO
+----
+* Server should always echo message back to client. Client should send
+  messageID with their message, that way it can choose to whether to implement
+  local echo or not.
+* Certain messages between the command-center and the client should be
+  privaleged. That is, the event name should be guaranteed not to collide with
+  anything sent by a server-side command-center client. Perhaps reserve certain
+  event names and error if a reserved name is used?
+* The command-center module should really just behave as 1) server-side wrapper
+  around socket.io, implementing rooms, broadcast, etc 2) client side
+  javascript.
+* Remove direct socket.io dependency in command-center. The consuming code
+  ought to be able to pass in any object which implements the correct methods.
+  Optionally, command-center can be implemented as a middleware.
+* CommandCenter.addEventHandler could just be renamed to .on() since that's what it does.
+* Q. How are namespaces really different from rooms? A. For one, namespaces
+  have their own connect event.
+* command-center-client should not be modified with match info - something
+  ought to extend it.

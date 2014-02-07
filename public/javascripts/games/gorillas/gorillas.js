@@ -620,4 +620,3 @@ Gorillas.prototype.matchEnded = function(eventData) {
     this.endOfGame(eventData.winner);
   }.bind(this));
 };
-

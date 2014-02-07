@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 11:39:21 AM EST
+// Last Modified:      Fri 07 Feb 2014 01:12:30 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -82,7 +82,8 @@
 
 var uuid = require ('uuid'),
   _ = require ('underscore'),
-  util = require('util');
+  util = require('util'),
+  CommandCenter = require('command-center');
 
 // The GameServer object contains all the games available and all the matches
 // being played.
@@ -92,11 +93,12 @@ var uuid = require ('uuid'),
 //                    filesystem at games/gameID/index.js.
 // app              - Express application object.
 // commandCenter    - Command center object.
-function GameServer (gameIDs, app, commandCenter) {
-  //  Handler to the express application.
+function GameServer (gameIDs, app, sessionSocketIO) {
+  //  Handle to the express application.
   //  This is used to bind the routes of a game to the express application.
   //  TODO: Could we decouple from express easily? Put the logic in a routing
   //  manager possibly. Low priority!
+  //  TODO: Doesn't appear to be used.
   this.app = app;
 
   //  Command center object.
@@ -106,7 +108,8 @@ function GameServer (gameIDs, app, commandCenter) {
   //  like game lists. If we didn't have this, we'd need to attach something to
   //  either the session or the socket object.
   //
-  this.commandCenter = commandCenter;
+  this.commandCenter = new CommandCenter (sessionSocketIO);
+
 
   // ----------------------
   // Command center commands.
@@ -380,7 +383,8 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
       eventData.roomName);
 
   // Send the room the updates match list.
-  this.commandCenter.roomEmit(eventData.roomName, 'matchList', this.matches);
+  // TODO: Limit to just pending matches from this room.
+  this.commandCenter.roomEmit(eventData.roomName, 'roomMatchList', this.matches);
 };
 
 
