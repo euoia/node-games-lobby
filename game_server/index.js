@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Thu 06 Feb 2014 02:39:09 PM EST
+// Last Modified:      Fri 07 Feb 2014 10:27:07 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -171,8 +171,8 @@ function GameServer (gameIDs, app, commandCenter) {
   }
 
   // Testing - start a gorillas match.
-  var gameClass        = this.games.gorillas;
-  var gameInstance     = new gameClass(this);
+  var gameOb          = this.games.gorillas;
+  var gameInstance    = new gameObj(this);
 
   this.instatiateMatch ({
     id:              'g',
