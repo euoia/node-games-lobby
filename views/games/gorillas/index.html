@@ -27,7 +27,7 @@
 			$(window).load (function () {
 				var pathElements = location.pathname.match(/\/gorillas\/(.*)\/(.*)/);
 				var matchID = pathElements[1];
-				var socket = io.connect('http://localhost/' + matchID);
+				var socket = io.connect('/' + matchID);
 
 				socket.on('connect', function() {
 					gorillas = new Gorillas({

@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Fri 07 Feb 2014 08:05:12 AM EST
+// Last Modified:      Fri 07 Feb 2014 08:17:28 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -175,10 +175,10 @@ Gorillas.prototype.throwBanana = function (socket, session, eventData) {
 
   var player = this.getPlayerByUsername(session.username);
 
-  //if (player.playerIdx !== this.currentPlayer()) {
-  //  console.log("The wrong player threw the banana!");
-  //  return socket.emit('error', {msg: 'It is not your turn.'});
-  //}
+  if (player.playerIdx !== this.currentPlayer()) {
+    console.log("The wrong player threw the banana!");
+    return socket.emit('error', {msg: 'It is not your turn.'});
+  }
 
   // TODO: Only need to emit to other player.
   this.players[this.otherPlayer()].socket.emit('bananaThrown', eventData);
@@ -192,15 +192,17 @@ Gorillas.prototype.endRound = function (socket, session) {
 
   var player = this.getPlayerByUsername(session.username);
 
-  //if (player.playerIdx !== this.currentPlayer()) {
-  //  console.log("The wrong player tried to end the round!");
-  //  return socket.emit('error', {msg: 'It is not your turn.'});
-  //}
+  // Perhaps unintuitively, it's the other player (the one that just threw the
+  // banana) that ends the round and gets the point.
+  if (player.playerIdx !== this.otherPlayer()) {
+    console.log("The wrong player tried to end the round!");
+    return socket.emit('error', {msg: 'It is not your turn.'});
+  }
 
-  this.wins[this.currentPlayer()] += 1;
-  if (this.enoughWins(this.currentPlayer())) {
-    console.log("Player %d has enough wins, the match is over.", this.currentPlayer());
-    this.emitAll('matchEnded', {winner: this.currentPlayer()});
+  this.wins[this.otherPlayer()] += 1;
+  if (this.enoughWins(this.otherPlayer())) {
+    console.log("Player %d has enough wins, the match is over.", this.otherPlayer());
+    this.emitAll('matchEnded', {winner: this.otherPlayer()});
   } else {
     this.nextRound();
   }

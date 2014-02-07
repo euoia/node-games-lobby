@@ -387,7 +387,10 @@ Gorillas.prototype.animateBanana = function(startTime, startPoint, xVel, yVel, t
       this.bananaImgs[0].height + 2,
       this.gorillaPositions[this.otherPlayer()]);
 
-    if (hasGorillaCollision) {
+    // Only one of the players should sent the endRound event.
+    if (hasGorillaCollision &&
+        this.currentPlayer() === this.myPlayer
+    ) {
       console.log("Gorilla collision!");
       this.listener.emit('endRound');
       return;
@@ -456,8 +459,7 @@ Gorillas.prototype.hasGorillaCollision = function(x, y, width, height, gorillaPo
       checkPoint(x + width, y + height)
     );
 
-    return true;
-    //return collision;
+    return collision;
 };
 
 Gorillas.prototype.nextTurn = function() {
@@ -537,12 +539,7 @@ Gorillas.prototype.enoughWins = function(playerIdx) {
 Gorillas.prototype.endOfGame = function(winningPlayerIdx) {
   this.initScreen();
 
-  var winningText;
-  if (winningPlayerIdx === 0) {
-    winningText = "Player 1 wins!";
-  } else {
-    winningText = "Player 2 wins!";
-  }
+  var winningText = this.usernames[winningPlayerIdx] + " wins!";
 
   // Draw the text.
   this.uiContext.fillStyle = "white";
