@@ -21,14 +21,16 @@ define([
     $(document).ready(function() {
       var commandCenter = new CommandCenter({
         roomUserListDiv: '#left-sidebar',
-        roomMatchListDiv: '#right-sidebar',
         messagesUl: '#chat-room .chat-box ul',
         messageScroll: '#content-body',
         messageEntryForm: '#message-entry-form',
         messageEntry: '#message-entry'
       });
 
-      var gameServer = new GameServer (commandCenter);
+      var gameServer = new GameServer (commandCenter, {
+        roomMatchListDiv: '#right-sidebar',
+        createMatchButton: '#create-match-button'
+      });
 
       // TODO: Move all chat logic out of Login and provide callback for loginSuccess.
       login = new Login(

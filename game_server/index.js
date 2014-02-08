@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 05:40:47 PM EST
+// Last Modified:      Fri 07 Feb 2014 05:51:10 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -507,7 +507,7 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
   if (this.matches[eventData.matchID].owner === session.username) {
     this.commandCenter.sendNotification(
       socket,
-      util.format('Cannot join your own match.'),
+      util.format('You cannot join your own match.'),
       eventData.roomName);
 
     return;

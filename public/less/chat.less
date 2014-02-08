@@ -11,14 +11,31 @@ h1 {
 }
 
 .usernameInputText {
-	margin-bottom: 1em;
+	margin-bottom: em;
 	font-size: 18px;
 }
 
+
+#controls-container {
+    margin-right: -160px;
+    float:left;
+    width:100%;
+}
+
+
+#input-container {
+    margin-right: 190px;
+}
+
+#button-container {
+    width:160px;
+    float:left
+}
+
 input.user-input[type="text"] {
+	width: 100%;
 	vertical-align: top;
-	width: 97%;
-	height: 30px;
+	height: 34px;
 	border-radius: 0px;
 	border: 0;
 	font-size: 16pt;
@@ -27,6 +44,23 @@ input.user-input[type="text"] {
 	border: 2px solid #cc0000;
 	font: 18pt headerfont, 'Arial Narrow', Tahoma;
 	letter-spacing: 1px;
+}
+
+#create-match-button {
+	background-color: blue;
+	border: 3px solid #0000cc;
+	border-radius: 10px;
+	font: 13pt Tahoma;
+	font-weight: bold;
+	padding: 0;
+	margin: 0;
+	color: white;
+	width: 160px;
+	height: 48px;
+    box-shadow:
+        inset 0 2px 4px rgba(255,255,255,0.7),
+        inset 0 -4px 4px rgba(0,0,0,0.3);
+    text-shadow: -2px -2px 5px rgba(0,0,0,1);
 }
 
 #message-entry-submit {
@@ -74,7 +108,14 @@ input.user-input[type="text"] {
 #roomUserList {
 	list-style: none;
 	margin: 0;
-	line-height: 24pt;
+}
+
+#roomUserList > li {
+	line-height: 28px;
+}
+
+li {
+	line-height: 22px;
 }
 
 #roomMatchListTitle {
@@ -110,6 +151,8 @@ input.user-input[type="text"] {
     box-shadow:
         inset 0 2px 4px rgba(255,255,255,0.7),
         inset 0 -4px 4px rgba(0,0,0,0.3);
+
+	border-radius: 10px;
 }
 
 .gameIcon {
