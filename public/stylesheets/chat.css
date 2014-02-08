@@ -24,3 +24,4 @@ li{line-height:22px;}
 .matchContainer:hover{cursor:pointer;}
 .gameIcon{width:40px;height:40px;float:left;margin-right:20px;margin-top:2px;margin-left:2px;}
 .matchText{margin-top:2px;width:100%;}
+#bananaCanvas{pointer-events:none;}

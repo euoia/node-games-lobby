@@ -47,8 +47,6 @@ define(['imageLoader'], function(ImageLoader) {
   };
 
   ThrowBananas.prototype.throwBanana = function(launchPoint, xVel, yVel) {
-    console.log("Throwing banana from xVel=%d yVel=%d launchPoint", xVel, yVel, launchPoint);
-    console.log("this.banana.width=%d this.banana.height=%d", this.banana.width, this.banana.height);
     var currTime = window.performance.now();
 
     window.requestAnimationFrame(
@@ -61,8 +59,6 @@ define(['imageLoader'], function(ImageLoader) {
 
     var xpos = startPoint.x + (xVel * deltaTime);
     var ypos = startPoint.y + (yVel * deltaTime) + (this.gravity * deltaTime * deltaTime);
-
-    console.log("animateBanana xPos=%d yPos=%d", xpos, ypos);
 
     // Clear the previous banana.
     if (this.bananaPosition.x !== undefined) {
