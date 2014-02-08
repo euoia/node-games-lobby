@@ -13,8 +13,9 @@ define([
     'jquery',
     'command-center-client',
     'game_server',
-    'login'
-  ], function($, CommandCenter, GameServer, Login) {
+    'login',
+    'throw_bananas'
+  ], function($, CommandCenter, GameServer, Login, ThrowBananas) {
 
     var login;
 
@@ -42,6 +43,8 @@ define([
         }
       );
     });
+
+    var throwBananas = new ThrowBananas('bananaCanvas');
 
     return login;
 });
