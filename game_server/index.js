@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 05:51:10 PM EST
+// Last Modified:      Fri 07 Feb 2014 08:58:41 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -317,9 +317,19 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
 
   // Tell the lobby client that it can launch the game and provide a url of the
   // format: gameID/matchID for the client to redirect to.
-  socket.emit('launchMatch', {
-    url: util.format('%s/%s/%s', match.gameID, match.id, match.game.getConfig('launchVerb'))
-  });
+  var eventData = {
+    url: util.format('%s/%s/%s',
+      match.gameID,
+      match.id,
+      match.game.getConfig('launchVerb'))
+  };
+
+
+  for (var i = 0; i < match.playerUsernames.length; i += 1) {
+    var playerUsername = match.playerUsernames[i];
+    console.log("Sending launchMatch to %s", playerUsername);
+    this.commandCenter.usernameEmit(playerUsername, 'launchMatch', eventData);
+  }
 
   this.bindMatchConnectionHandler(match.id);
 };
@@ -507,7 +517,7 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
   if (this.matches[eventData.matchID].owner === session.username) {
     this.commandCenter.sendNotification(
       socket,
-      util.format('You cannot join your own match.'),
+      util.format('You cannot join your own game.'),
       eventData.roomName);
 
     return;
