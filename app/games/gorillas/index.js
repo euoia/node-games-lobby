@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Sun 09 Feb 2014 04:11:46 PM EST
+// Last Modified:      Sun 09 Feb 2014 05:08:46 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -13,9 +13,15 @@
 // TODO: Handle observers (non-players) in the connection event.
 // TODO: Document the events emitted and received by this game.
 
-function Gorillas (resultService) {
+function Gorillas (resultService, usernames) {
   // The result listener to which we publish the result of the match.
   this.resultService = resultService;
+
+  // Array containing the usernames that are part of this match.
+  this.usernames = usernames;
+
+  // Either OK or FINISHED.
+  this.gameState = 'OK';
 
   // Player array.
   // Value is player object.
@@ -42,6 +48,7 @@ function Gorillas (resultService) {
   // The player has thrown their banana.
   // TODO: This could be cleaner.
   this.socketEventHandlers = {
+    'disconnect': this.disconnect,
     'ready': this.ready,
     'throwBanana': this.throwBanana,
     'endRound': this.endRound
@@ -122,9 +129,30 @@ Gorillas.prototype.connection = function(err, socket, session) {
     if (this.socketEventHandlers.hasOwnProperty(event)) {
       var eventHandler = this.socketEventHandlers[event];
       socket.on(event, eventHandler.bind(this, socket, session));
-      console.log('gorillas game: Bound event %s for user %s.', event, session.username);
+      console.log('gorillas game: Bound event to socket for %s.', session.username, event);
     }
   }
+};
+
+Gorillas.prototype.disconnect = function(socket, session) {
+  if (this.gameState === 'FINISHED') {
+    return;
+  }
+
+  // Find the winner.
+  var winnerIdx = (this.usernames.indexOf(session.username) + 1) % 2;
+  var winnerUsername = this.usernames[winnerIdx];
+
+  // Disconnection results in forfeiting the game.
+  this.resultService.setLoser(session.username);
+  this.resultService.setWinner(winnerUsername);
+  this.resultService.publishResult();
+
+  console.log("Gorillas: %s disconnected, %s is the winner.",
+    session.username,
+    winnerUsername);
+
+  this.endOfMatch();
 };
 
 // Return the URL routes required by this game.
@@ -203,10 +231,11 @@ Gorillas.prototype.endRound = function (socket, session) {
   this.wins[this.otherPlayer()] += 1;
   if (this.enoughWins(this.otherPlayer())) {
     console.log("Player %d has enough wins, the match is over.", this.otherPlayer());
-    this.emitAll('matchEnded', {winner: this.otherPlayer()});
     this.resultService.setWinner(this.players[this.otherPlayer()].username);
     this.resultService.setLoser(this.players[this.currentPlayer()].username);
     this.resultService.publishResult();
+
+    this.endOfMatch();
   } else {
     this.nextRound();
   }
@@ -329,6 +358,12 @@ Gorillas.prototype.nextRound = function() {
 
   this.nextTurn();
   console.log("It is player %d's turn", this.currentPlayer());
+};
+
+
+Gorillas.prototype.endOfMatch = function() {
+  this.emitAll('matchEnded', {winner: this.otherPlayer()});
+  this.gameState = 'FINISHED';
 };
 
 module.exports = Gorillas;

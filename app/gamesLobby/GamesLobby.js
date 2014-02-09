@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 04:10:48 PM EST
+// Last Modified:      Sun 09 Feb 2014 05:03:30 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -162,9 +162,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   // --------------------------------------------------
   // Testing - start a gorillas match.
   var match = this.matchManager.createMatch ('g', 'gorillas', this.games.gorillas, 'james');
-  match.playerUsernames.push('bob');
-  match.state = 'PLAYING';
-  this.bindMatchConnectionHandler('g');
+  this.matchManager.addPlayerToMatch('bob', match);
   // --------------------------------------------------
 }
 
@@ -228,7 +226,6 @@ GamesLobby.prototype.getAvailableGames = function() {
 
 // Launch a match - there are enough players.
 GamesLobby.prototype.launchMatch = function(match) {
-
   // Tell the lobby client that it can launch the game and provide a url of the
   // format: gameID/matchID for the client to redirect to.
   var eventData = {
@@ -243,22 +240,6 @@ GamesLobby.prototype.launchMatch = function(match) {
     console.log("Sending launchMatch to %s", playerUsername);
     this.commandCenter.usernameEmit(playerUsername, 'launchMatch', eventData);
   }
-
-  this.bindMatchConnectionHandler(match.id);
-};
-
-GamesLobby.prototype.bindMatchConnectionHandler = function(matchID) {
-  console.log('Binding match socket.io connection handler for matchID=%s', matchID);
-
-  var match = this.matchManager.getMatch(matchID);
-
-  // Add the socket.io namespaced listener, call gameInstance.connection but
-  // ensure 'this' is bound to the gameInstance object.
-  this.commandCenter.addNamespacedEventHandler(
-    matchID,
-    'connection',
-    match.gameInstance.connection.bind(match.gameInstance)
-  );
 };
 
 
@@ -373,8 +354,16 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
   // Send the countdown to each player.
   // TODO: Should this be done on the client side?
   if (match.state === 'PLAYING') {
-    var secondsRemaining = 5;
 
+    // Add the socket.io namespaced listeners.
+    this.commandCenter.addNamespacedEventHandler(
+      match.id,
+      'connection',
+      match.gameInstance.connection.bind(match.gameInstance)
+    );
+
+    // Do the countdown on the clients.
+    var secondsRemaining = 5;
     var sendCountdown = function() {
       var s;
 

@@ -34,14 +34,13 @@ MatchManager.prototype.createMatch = function(
   Game,
   owner
 ) {
-  var resultService   = new ResultService(matchID, this.resultListener);
-  var gameInstance    = new Game(resultService);
 
   var match = {
     id:                matchID,
     gameID:            gameID,
     owner:             owner,
-    gameInstance:      gameInstance,
+    Game:              Game,
+    gameInstance:      null,
     state:             'WAITING',
     creationDate:      Date.now(),
     playerUsernames:   [ owner ],
@@ -58,9 +57,23 @@ MatchManager.prototype.addPlayerToMatch = function(username, match) {
   match.playerUsernames.push(username);
 
   if (match.playerUsernames.length === match.minPlayers) {
-    match.state = 'PLAYING';
+    this.startPlayingMatch(match);
   }
 };
+
+MatchManager.prototype.startPlayingMatch = function(match) {
+  console.log('MatchManager startPlayingMatch', match);
+  match.state = 'PLAYING';
+
+  // Instantiate a ResultService for the game instance to use.
+  var resultService   = new ResultService(match.id, this.resultListener);
+
+  // Instantiate the game.
+  var Game            = match.Game;
+  var gameInstance    = new Game(resultService, match.playerUsernames);
+  match.gameInstance = gameInstance;
+};
+
 
 MatchManager.prototype.getMatch = function(matchID) {
   return this.matches[matchID];
