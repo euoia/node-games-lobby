@@ -28,7 +28,7 @@ define([
         messageEntry: '#message-entry'
       });
 
-      var gameServer = new GameServer (commandCenter, {
+      var gameLobby = new GameLobby (commandCenter, {
         roomMatchListDiv: '#right-sidebar',
         createMatchButton: '#create-match-button'
       });
