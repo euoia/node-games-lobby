@@ -15,7 +15,7 @@ define([
     'GameLobby',
     'Login',
     'ThrowBananas'
-  ], function($, CommandCenter, GameServer, Login, ThrowBananas) {
+  ], function($, CommandCenter, GameLobby, Login, ThrowBananas) {
 
     var login;
 
