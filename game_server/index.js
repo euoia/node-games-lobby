@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Feb 2014 08:58:41 PM EST
+// Last Modified:      Sun 09 Feb 2014 09:36:54 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -529,7 +529,6 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
 
 GameServer.prototype.instatiateMatch = function(matchData) {
   this.matches[matchData.id] = matchData;
-  console.log("Instantiated match match", this.matches);
 };
 
 GameServer.prototype.sendRoomWaitingMatches = function(roomName) {
