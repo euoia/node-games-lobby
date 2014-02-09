@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 11:06:43 AM EST
+// Last Modified:      Sun 09 Feb 2014 12:16:58 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -16,34 +16,6 @@
 //  1. Errors. What to do? Throw an error? Yes for now. This means that a
 //     client could theoretically cause a server error by submitting bad data.
 //     That's fine for now.
-// --------------------------------------------------
-// TODOs
-// ----
-// TODO: Handle games with a variable number of players.
-// TODO: Since we are adding socket events with chat.addSocketEvent we could
-//       proxy that in order to log any incoming socket events before they are
-//       passed on.
-// TODO: Handle cancellations if a player leaves or tries to start another game.
-// TODO: Sort out match/game nomenclature.
-// TODO: Thoroughly rename chat to command center.
-// TODO: Fix handler/listener/event etc.
-// TODO: Handling of sockets/sessions should be simpler (not 2 objects).
-// TODO: Use eventData instead of simply data, to convey that it is sent by the event emitter.
-// TODO: Is roomName tacked onto the eventData? If so - that's a bit bad to a have a reserved key.
-// TODO: It would be good if the game code did not need to deal with: sockets, sessions, requests, responses.
-// TODO: Fix the name and directory name of this module. Probably should be GameLobby game-lobby.js.
-// --------------------------------------------------
-// Regarding socket.io namespaces.
-// ----
-// It is quite difficult to see how we could use a namespace like /tictactoe
-// and still route messages to the actual game object. An alternative design
-// uses a namespace of the game ID, and adds the listeners when the game is
-// created. This should work - but how do we tear down the listeners when the
-// game is finished? Additionally - is there any significant overhead with
-// having this large number of namespaces? What will happen if we cannot
-// destroy the listener when the game finishes?
-//
-// - Update 2013-10-30: No idea what this means.
 // --------------------------------------------------
 // Game object documentation
 // ----
@@ -84,7 +56,10 @@ var uuid = require ('uuid'),
   _ = require ('underscore'),
   util = require('util'),
   CommandCenter = require('command-center'),
-  EventEmitter = require('events').EventEmitter;
+  EventEmitter = require('events').EventEmitter,
+  pluralize = require('pluralize'),
+  ResultService = require('./ResultService.js'),
+  ResultStore = require('./ResultStore.js');
 
 // The GamesLobby object contains all the games available and all the matches
 // being played.
@@ -109,8 +84,8 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   //  like game lists. If we didn't have this, we'd need to attach something to
   //  either the session or the socket object.
   //
-  this.eventEmitter = new EventEmitter();
-  this.commandCenter = new CommandCenter (sessionSocketIO, this.eventEmitter);
+  this.commandListener = new EventEmitter();
+  this.commandCenter = new CommandCenter (sessionSocketIO, this.commandListener);
 
   // ----------------------
   // Command center commands.
@@ -123,6 +98,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   this.commandCenter.addEventHandler('createMatch', this.createMatch.bind(this));
   this.commandCenter.addEventHandler('joinGame', this.joinGame.bind(this));
   this.commandCenter.addEventHandler('joinMatch', this.joinMatch.bind(this));
+  this.commandCenter.addEventHandler('record', this.getPlayerRecord.bind(this));
 
   //------------------------------------------------------
   // matches:
@@ -176,6 +152,25 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
     app.get('/' + gameID + '/*/*', this.gameRouteHandler.bind(this, gameID));
   }
 
+  // The result store.
+  // Stores results of matches.
+  this.resultStore = new ResultStore();
+
+  // The result listener.
+  // When a match ends in a result, it is published through this service as a
+  // 'result' event.
+  this.resultListener = new EventEmitter();
+  this.resultListener.on('result', function (eventData) {
+    this.resultStore.addWin(eventData.winner);
+    this.resultStore.addLoss(eventData.loser);
+  }.bind(this));
+
+  // Send the room match list to players when they enter a room.
+  this.commandListener.on('subscribe', function(eventData) {
+    this.sendRoomWaitingMatches(eventData.roomName);
+  }.bind(this));
+
+  // --------------------------------------------------
   // Testing - start a gorillas match.
   var gameObj         = this.games.gorillas;
   var gameInstance    = new gameObj(this);
@@ -192,11 +187,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   });
 
   this.bindMatchConnectionHandler('g');
-
-  // Send the room match list to players when they enter a room.
-  this.eventEmitter.on('subscribe', function(eventData) {
-    this.sendRoomWaitingMatches(eventData.roomName);
-  }.bind(this));
+  // --------------------------------------------------
 }
 
 // ----------------------
@@ -528,7 +519,11 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
 };
 
 
+// TODO: Move more of the instantiation logic into here.
 GamesLobby.prototype.instatiateMatch = function(matchData) {
+  var resultService = new ResultService(matchData.id, this.resultListener);
+
+  matchData.resultService = resultService;
   this.matches[matchData.id] = matchData;
 };
 
@@ -543,4 +538,59 @@ GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
   this.commandCenter.roomEmit(roomName, 'roomMatchList', sortedWaitingMatches);
 };
 
+GamesLobby.prototype.getPlayerRecord = function(socket, session, eventData) {
+  console.log("Received getPlayerRecord", eventData);
+
+  var playerRecord = util.format(
+    "%s has %d %s and %d %s.",
+    eventData.username,
+    this.resultStore.getWins(eventData.username),
+    pluralize('win', this.resultStore.getWins(eventData.username)),
+    this.resultStore.getLosses(eventData.username),
+    pluralize('loss', this.resultStore.getLosses(eventData.username)));
+
+
+  this.commandCenter.sendNotification(
+    socket,
+    playerRecord,
+    eventData.roomName);
+};
+
 module.exports = GamesLobby;
+
+// --------------------------------------------------
+// TODOs
+// ----
+// TODO: Handle games with a variable number of players.
+// TODO: Since we are adding socket events with chat.addSocketEvent we could
+//       proxy that in order to log any incoming socket events before they are
+//       passed on.
+// TODO: Handle cancellations if a player leaves or tries to start another game.
+// TODO: Sort out match/game nomenclature.
+// TODO: Thoroughly rename chat to command center.
+// TODO: Fix handler/listener/event etc.
+// TODO: Handling of sockets/sessions should be simpler (not 2 objects).
+// TODO: Use eventData instead of simply data, to convey that it is sent by the
+//       event emitter.
+// TODO: Is roomName tacked onto the eventData? If so - that's a bit bad to a
+//       have a reserved key.
+// TODO: It would be good if the game code did not need to deal with: sockets,
+//       sessions, requests, responses.
+// TODO: Fix the name and directory name of this module. Probably should be
+//       GameLobby game-lobby.js.
+// TODO: Rather than hard code the commands in the client-side javascript it
+//       would be better if there was an event to retrieve the commands. This
+//       might be harder than it seems, it might require the server to describe
+//       the command format (number of parameters etc).
+// --------------------------------------------------
+// Regarding socket.io namespaces.
+// ----
+// It is quite difficult to see how we could use a namespace like /tictactoe
+// and still route messages to the actual game object. An alternative design
+// uses a namespace of the game ID, and adds the listeners when the game is
+// created. This should work - but how do we tear down the listeners when the
+// game is finished? Additionally - is there any significant overhead with
+// having this large number of namespaces? What will happen if we cannot
+// destroy the listener when the game finishes?
+//
+// - Update 2013-10-30: No idea what this means.

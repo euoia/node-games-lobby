@@ -18,6 +18,7 @@ define([], function() {
     commandCenter.addCommand('listMatches', function() { commandCenter.emit('listMatches'); });
     commandCenter.addCommand('createMatch', this.createMatch.bind(this));
     commandCenter.addCommand('joinMatch', this.joinMatch.bind(this));
+    commandCenter.addCommand('record', this.playerRecord.bind(this));
 
     // Listener events.
     commandCenter.addListener('launchMatch', this.launchGame.bind(this));
@@ -58,6 +59,17 @@ define([], function() {
 
     this.commandCenter.emit('joinMatch', {
       gameID: gameID
+    });
+  };
+
+  GameLobby.prototype.playerRecord = function(username) {
+    if (username === undefined) {
+      this.commandCenter.addNotification(Date.now(), 'Must specify a username.');
+      return;
+    }
+
+    this.commandCenter.emit('record', {
+      username: username
     });
   };
 
