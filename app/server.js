@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Sun 09 Feb 2014 10:04:11 AM EST
+//  Last Modified:      Sun 09 Feb 2014 11:08:34 AM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -32,10 +32,10 @@ var
   express = require('express'),                    // This is an express application.
   lessMiddleware = require('less-middleware'),     // CSS uses less, which is compiled on-the-fly.
   RedisStore = require('connect-redis')(express),  // Used for session storage.
-  lobbyRoutes = require('./routes/lobby'),         // Lobby-related routes.
-  sessionRoutes = require('./routes/session'),     // Session-related routes.
   Socketio = require('socket.io'),
-  SessionSocketIO = require('session.socket.io');
+  SessionSocketIO = require('session.socket.io'),
+  gamesLobbyRoutes = require('./gamesLobby/gamesLobbyRoutes.js'),
+  accountRoutes = require('./account/accountRoutes.js');
 
 // --------------------------------------------------
 // Application configuration.
@@ -97,8 +97,8 @@ app.configure(function() {
   // https://github.com/emberfeather/less.js-middleware
   app.use(lessMiddleware({
     prefix: '/stylesheets',
-    src: __dirname + '/public/less',
-    dest: __dirname + '/public/stylesheets',
+    src: __dirname + '../wwwroot/less',
+    dest: __dirname + '../wwwroot/stylesheets',
     force: true,
     debug: true,
     compress: true
@@ -106,7 +106,7 @@ app.configure(function() {
 
   // App middleware: Intercept requests that match items in the public
   // directory and serve as static contect.
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(path.join(__dirname, '../wwwroot')));
 
   app.use(app.router);
 
@@ -122,12 +122,12 @@ app.configure('development', function() {
 // Assign routes.
 
 // Use the lobby login as the landing page.
-app.get('/', lobbyRoutes.login);
+app.get('/', gamesLobbyRoutes.login);
 
 // Hook up any POST routes requested by session.js - put them under /session/routeName.
-for (var routePath in sessionRoutes.postRoutes) {
-  if (sessionRoutes.postRoutes.hasOwnProperty(routePath)) {
-    app.post('/session/' + routePath, sessionRoutes.postRoutes[routePath]);
+for (var routePath in accountRoutes.postRoutes) {
+  if (accountRoutes.postRoutes.hasOwnProperty(routePath)) {
+    app.post('/session/' + routePath, accountRoutes.postRoutes[routePath]);
   }
 }
 
@@ -143,8 +143,5 @@ var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 // Create the game server, give it a handle to the express application and command center.
 // The handle to the command center is required so that it can add socket.io event listeners.
 // The handle to the express application is required in order to bind game-specific routes.
-//
-// TODO: Rename to gameLobby.
-// TODO: Check that app and chat are really required by the lobby.
-var GameServer = require('./game_server');
-var gameServer = new GameServer(games, app, sessionSocketIO);
+var GamesLobby = require('./gamesLobby/GamesLobby.js');
+var gamesLobby = new GamesLobby(games, app, sessionSocketIO);

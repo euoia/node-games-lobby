@@ -2,10 +2,6 @@
   "name": "node-games-lobby",
   "version": "0.0.2",
   "private": true,
-  "scripts": {
-    "start": "node app",
-    "postinstall": "bower install"
-  },
   "dependencies": {
     "express": "3.0.3",
     "ejs": "*",
@@ -25,6 +21,7 @@
   },
   "scripts": {
     "test": "cd test && mocha app.js",
-    "start": "node app.js"
+    "start": "node app/server.js",
+    "postinstall": "bower install"
   }
 }

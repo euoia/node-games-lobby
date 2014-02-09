@@ -1,10 +1,10 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 09:36:54 AM EST
+// Last Modified:      Sun 09 Feb 2014 11:06:43 AM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
 // ----
-// The GameServer object contains all the games and all of the matches that are
+// The GamesLobby object contains all the games and all of the matches that are
 // in-progress.
 // --------------------------------------------------
 // Limitations / Rules:
@@ -86,7 +86,7 @@ var uuid = require ('uuid'),
   CommandCenter = require('command-center'),
   EventEmitter = require('events').EventEmitter;
 
-// The GameServer object contains all the games available and all the matches
+// The GamesLobby object contains all the games available and all the matches
 // being played.
 //
 // gameIDs          - Array of game IDs (strings).
@@ -94,7 +94,7 @@ var uuid = require ('uuid'),
 //                    filesystem at games/gameID/index.js.
 // app              - Express application object.
 // commandCenter    - Command center object.
-function GameServer (gameIDs, app, sessionSocketIO) {
+function GamesLobby (gameIDs, app, sessionSocketIO) {
   //  Handle to the express application.
   //  This is used to bind the routes of a game to the express application.
   //  TODO: Could we decouple from express easily? Put the logic in a routing
@@ -169,7 +169,8 @@ function GameServer (gameIDs, app, sessionSocketIO) {
     var gameID = gameIDs[gameIDidx];
 
     // Require the game object.
-    var game = this.games[gameID] = require('./games/' + gameID);
+    // TODO: Game directory ought to be configurable.
+    var game = this.games[gameID] = require(util.format('../games/%s/index.js', gameID));
 
     // The URL is made up of /gameID/matchID/action.
     app.get('/' + gameID + '/*/*', this.gameRouteHandler.bind(this, gameID));
@@ -207,7 +208,7 @@ function GameServer (gameIDs, app, sessionSocketIO) {
 //
 // It checks that the game, match, verb are valid and then hands over to the
 // game instance.
-GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
+GamesLobby.prototype.gameRouteHandler = function (gameID, req, res) {
   var matchID  = req.params[0];
   var action   = req.params[1];
   var match    = this.matches[matchID];
@@ -252,22 +253,22 @@ GameServer.prototype.gameRouteHandler = function (gameID, req, res) {
 };
 
 // Return as an array the gameIDs of games that can be played.
-GameServer.prototype.getAvailableGames = function() {
+GamesLobby.prototype.getAvailableGames = function() {
   return Object.keys(this.games);
 };
 
 // Return the game object given its gameID.
-GameServer.prototype.game = function(gameID) {
+GamesLobby.prototype.game = function(gameID) {
   return this.games[gameID];
 };
 
 // Returns a match given its UUID.
-GameServer.prototype.match = function(matchUuid) {
+GamesLobby.prototype.match = function(matchUuid) {
   return this.matches[matchUuid];
 };
 
 // Add a player to a specific match.
-GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
+GamesLobby.prototype.addPlayerToMatch = function(socket, session, match) {
   var $this = this;
 
   // TODO: Perhaps the command center could remember the socket? Or at least
@@ -313,7 +314,7 @@ GameServer.prototype.addPlayerToMatch = function(socket, session, match) {
 };
 
 // Launch a match - there are enough players.
-GameServer.prototype.launchMatch = function(socket, session, match) {
+GamesLobby.prototype.launchMatch = function(socket, session, match) {
 
   // Tell the lobby client that it can launch the game and provide a url of the
   // format: gameID/matchID for the client to redirect to.
@@ -334,7 +335,7 @@ GameServer.prototype.launchMatch = function(socket, session, match) {
   this.bindMatchConnectionHandler(match.id);
 };
 
-GameServer.prototype.bindMatchConnectionHandler = function(matchID) {
+GamesLobby.prototype.bindMatchConnectionHandler = function(matchID) {
   console.log('Binding match socket.io connection handler for matchID=%s', matchID);
 
   // Add the socket.io namespaced listener, call gameInstance.connection but
@@ -352,9 +353,9 @@ GameServer.prototype.bindMatchConnectionHandler = function(matchID) {
 // ----------------------
 
 // A socket has requested the list of games that may be created.
-GameServer.prototype.listGames = function(socket, session, eventData) {
+GamesLobby.prototype.listGames = function(socket, session, eventData) {
   if (eventData.roomName === undefined) {
-    console.log('GameServer: Warning: listGames without eventData.roomName.');
+    console.log('GamesLobby: Warning: listGames without eventData.roomName.');
     return;
   }
 
@@ -369,7 +370,7 @@ GameServer.prototype.listGames = function(socket, session, eventData) {
 // WAITING state.
 // TODO: data.game should be data.gameID.
 // TODO: data is not a well named variable.
-GameServer.prototype.createMatch = function(socket, session, eventData) {
+GamesLobby.prototype.createMatch = function(socket, session, eventData) {
   var gameUuid;
 
   // Check the game name is one of the available games.
@@ -410,7 +411,7 @@ GameServer.prototype.createMatch = function(socket, session, eventData) {
 // A socket has requested the list of matches that are WAITING.
 // TODO: Move display of this information to the client, remove server-side
 // formatting.
-GameServer.prototype.listWaitingMatches = function(socket, session, eventData) {
+GamesLobby.prototype.listWaitingMatches = function(socket, session, eventData) {
   var waitingMatches = _.where(this.matches, {'state': 'WAITING'}),
     formatStr,              // A formatter string.
     msg,                    // The message to send back to the socket.
@@ -451,7 +452,7 @@ GameServer.prototype.listWaitingMatches = function(socket, session, eventData) {
 // joinGame event handler.
 //
 // A socket has requested to join any WAITING game.
-GameServer.prototype.joinGame = function(socket, session, eventData) {
+GamesLobby.prototype.joinGame = function(socket, session, eventData) {
   // Check the game exists.
   if (_.has(this.games, eventData.gameID) === false) {
     this.commandCenter.sendNotification(
@@ -493,7 +494,7 @@ GameServer.prototype.joinGame = function(socket, session, eventData) {
 // joinMatch event handler.
 //
 // A socket has requested to join a specific match.
-GameServer.prototype.joinMatch = function(socket, session, eventData) {
+GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   console.log("Received joinMatch", eventData);
 
   if (_.has(this.matches, eventData.matchID) === false) {
@@ -527,11 +528,11 @@ GameServer.prototype.joinMatch = function(socket, session, eventData) {
 };
 
 
-GameServer.prototype.instatiateMatch = function(matchData) {
+GamesLobby.prototype.instatiateMatch = function(matchData) {
   this.matches[matchData.id] = matchData;
 };
 
-GameServer.prototype.sendRoomWaitingMatches = function(roomName) {
+GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
   // Sort WAITING matches based on created date.
   var sortedWaitingMatches = _.where(
     this.matches,
@@ -542,4 +543,4 @@ GameServer.prototype.sendRoomWaitingMatches = function(roomName) {
   this.commandCenter.roomEmit(roomName, 'roomMatchList', sortedWaitingMatches);
 };
 
-module.exports = GameServer;
+module.exports = GamesLobby;

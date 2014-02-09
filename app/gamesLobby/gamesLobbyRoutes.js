@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 10:56:21 AM GMT
-//  Last Modified:      Sun 09 Feb 2014 10:11:42 AM EST
+//  Last Modified:      Sun 09 Feb 2014 11:07:46 AM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -15,7 +15,7 @@ exports.login = function(req, res){
     return util.format('Guest%d', Math.floor(Math.random() * 10000));
   }
 
-  res.render('index', {
+  res.render('../loginAndLobby', {
     title: 'Gorilla chat',
     suggestedUsername: generateRandomUsername()});
 };
