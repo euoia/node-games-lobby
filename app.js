@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Fri 07 Feb 2014 01:27:48 PM EST
+//  Last Modified:      Sun 09 Feb 2014 10:04:11 AM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -94,8 +94,6 @@ app.configure(function() {
     store: sessionStore
   }));
 
-  app.use(app.router);
-
   // https://github.com/emberfeather/less.js-middleware
   app.use(lessMiddleware({
     prefix: '/stylesheets',
@@ -109,6 +107,9 @@ app.configure(function() {
   // App middleware: Intercept requests that match items in the public
   // directory and serve as static contect.
   app.use(express.static(path.join(__dirname, 'public')));
+
+  app.use(app.router);
+
 });
 
 // Set development configuration.
