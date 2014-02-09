@@ -1,7 +1,7 @@
 // The map generator.
 //
 // All measurements are in terms of grid-squared and not pixels (except gridSize itself).
-define(['imageLoader'], function(ImageLoader) {
+define(['ImageLoader'], function(ImageLoader) {
   function ThrowBananas(bananaCanvasID) {
     this.gravity = 40;
 

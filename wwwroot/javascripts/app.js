@@ -13,8 +13,8 @@ define([
     'jquery',
     'command-center-client',
     'GameLobby',
-    'login',
-    'throw_bananas'
+    'Login',
+    'ThrowBananas'
   ], function($, CommandCenter, GameServer, Login, ThrowBananas) {
 
     var login;
