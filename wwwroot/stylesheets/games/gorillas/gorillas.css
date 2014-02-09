@@ -13,3 +13,7 @@
   font-weight: 400;
   src: local('Press Start 2P'), local('PressStart2P-Regular'), url('font/Press+Start+2P.woff');
 }
+
+.hoverHand:hover {
+	cursor: pointer;
+}

@@ -94,6 +94,10 @@ function Gorillas(options) {
   this.mousedownListener = null;
   this.mouseupListener = null;
 
+  // The URL to return to after the game ends.
+  // This ought to be sent by the server in the matchStarted event.
+  this.returnURL = null;
+
   this.initScreen();
 
   // If we had more images I would write a proper preloader.
@@ -556,8 +560,14 @@ Gorillas.prototype.endOfGame = function(winningPlayerIdx) {
 
   this.uiContext.textAlign = "center";
   this.uiContext.fillText(winningText,
-    this.toPixels(this.mapWidth / 2),
-    this.toPixels(this.mapHeight / 2));
+  this.toPixels(this.mapWidth / 2),
+  this.toPixels(this.mapHeight / 2));
+
+  // Click the canvas to go back.
+  this.banana.className = this.banana.className + "hoverHand";
+  this.banana.addEventListener('mousedown', function() {
+    location.href = this.returnURL;
+  });
 };
 
 Gorillas.prototype.emit = function(eventName, eventData) {
@@ -583,6 +593,7 @@ Gorillas.prototype.bananaThrown = function(eventData) {
 Gorillas.prototype.matchStarted = function(eventData) {
   this.usernames = eventData.usernames;
   this.myPlayer = eventData.playerIdx;
+  this.returnURL = eventData.returnURL;
 
   console.log("Waiting to receive roundStarted from server");
   this.listener.on('roundStarted', this.roundStarted.bind(this));

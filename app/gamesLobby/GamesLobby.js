@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 12:16:58 PM EST
+// Last Modified:      Sun 09 Feb 2014 02:47:53 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -58,8 +58,8 @@ var uuid = require ('uuid'),
   CommandCenter = require('command-center'),
   EventEmitter = require('events').EventEmitter,
   pluralize = require('pluralize'),
-  ResultService = require('./ResultService.js'),
-  ResultStore = require('./ResultStore.js');
+  ResultStore = require('./ResultStore.js'),
+  MatchManager = require('./MatchManager.js');
 
 // The GamesLobby object contains all the games available and all the matches
 // being played.
@@ -99,22 +99,6 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   this.commandCenter.addEventHandler('joinGame', this.joinGame.bind(this));
   this.commandCenter.addEventHandler('joinMatch', this.joinMatch.bind(this));
   this.commandCenter.addEventHandler('record', this.getPlayerRecord.bind(this));
-
-  //------------------------------------------------------
-  // matches:
-  this.matches = {};
-  // Matches that have not been removed from memory.
-  //    object key: match UUID.
-  //    object val: match object (see below).
-
-  // match object:
-  //  id        - UUID identifying the match.
-  //  owner     - player who started the match.
-  //  gameID    - gameID of the game.
-  //  state     - one of:
-  //    WAITING - waiting for enough players to join.
-  //    PLAYING - currently playing.
-  //------------------------------------------------------
 
   //------------------------------------------------------
   //  The enabled games.
@@ -170,22 +154,15 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
     this.sendRoomWaitingMatches(eventData.roomName);
   }.bind(this));
 
+  // The storage for the matches.
+  // TODO: We could store the results in the MatchManager I suppose.
+  this.matchManager = new MatchManager(this.resultListener);
+
   // --------------------------------------------------
   // Testing - start a gorillas match.
-  var gameObj         = this.games.gorillas;
-  var gameInstance    = new gameObj(this);
-
-  this.instatiateMatch ({
-    id:              'g',
-    owner:           'james',
-    game:            gameObj,
-    gameInstance:    gameInstance,
-    gameID:          'gorillas',
-    state:           'PLAYING',
-    created:         Date.now(),
-    playerUsernames: ['james', 'bob']
-  });
-
+  var match = this.matchManager.createMatch ('g', 'gorillas', this.games.gorillas, 'james');
+  match.playerUsernames.push('bob');
+  match.state = 'PLAYING';
   this.bindMatchConnectionHandler('g');
   // --------------------------------------------------
 }
@@ -202,11 +179,11 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
 GamesLobby.prototype.gameRouteHandler = function (gameID, req, res) {
   var matchID  = req.params[0];
   var action   = req.params[1];
-  var match    = this.matches[matchID];
+  var match    = this.matchManager.getMatch(matchID);
 
   if (this.games[gameID] === undefined) {
     console.error(util.format(
-      'game_server [gameID=%s matchID=%s action=%s] : error, matchID not found.',
+      'game_server [gameID=%s matchID=%s action=%s] : error, gameID not found.',
       gameID,
       matchID,
       action));
@@ -227,9 +204,9 @@ GamesLobby.prototype.gameRouteHandler = function (gameID, req, res) {
 
   // Check whether a route for this action exists in the game instance.
   var matchRoutes = match.gameInstance.getRoutes();
-  var routeHandler = matchRoutes[action];
+  var route = matchRoutes[action];
 
-  if (routeHandler === undefined) {
+  if (route === undefined) {
     console.error(util.format(
       'game_server [gameID=%s matchID=%s action=%s] : error, action not valid.',
       gameID,
@@ -240,7 +217,7 @@ GamesLobby.prototype.gameRouteHandler = function (gameID, req, res) {
   }
 
   // Finally, call the route handler function.
-  return routeHandler.call(match.gameInstance, req, res);
+  return route.call(match.gameInstance, req, res);
 };
 
 // Return as an array the gameIDs of games that can be played.
@@ -248,64 +225,8 @@ GamesLobby.prototype.getAvailableGames = function() {
   return Object.keys(this.games);
 };
 
-// Return the game object given its gameID.
-GamesLobby.prototype.game = function(gameID) {
-  return this.games[gameID];
-};
-
-// Returns a match given its UUID.
-GamesLobby.prototype.match = function(matchUuid) {
-  return this.matches[matchUuid];
-};
-
-// Add a player to a specific match.
-GamesLobby.prototype.addPlayerToMatch = function(socket, session, match) {
-  var $this = this;
-
-  // TODO: Perhaps the command center could remember the socket? Or at least
-  // provide lookup based on username.
-  this.commandCenter.sendNotification(
-    socket,
-    util.format('You have joined %s\'s game of %s.', match.owner, match.gameID));
-
-
-  // Add the player to the array of usernames playing.
-  match.playerUsernames.push(socket.username);
-
-  if (match.playerUsernames.length === match.game.getConfig('minPlayers')) {
-    match.state = 'PLAYING';
-
-    // TODO: Remove the match from the list.
-
-
-    var countdown = 5;
-    var sendCountdown = function() {
-      var s;
-
-      if (countdown === 0) {
-        $this.launchMatch(socket, session, match);
-      } else {
-        if (countdown === 1) {
-          s = 'second';
-        } else {
-          s = 'seconds';
-        }
-
-        $this.commandCenter.sendNotification(
-          socket,
-          util.format('%s\'s game of %s will begin in %s %s...', match.owner, match.gameID, countdown, s));
-
-        countdown -= 1;
-        setTimeout(sendCountdown, 1000);
-      }
-    };
-
-    sendCountdown();
-  }
-};
-
 // Launch a match - there are enough players.
-GamesLobby.prototype.launchMatch = function(socket, session, match) {
+GamesLobby.prototype.launchMatch = function(match) {
 
   // Tell the lobby client that it can launch the game and provide a url of the
   // format: gameID/matchID for the client to redirect to.
@@ -313,9 +234,8 @@ GamesLobby.prototype.launchMatch = function(socket, session, match) {
     url: util.format('%s/%s/%s',
       match.gameID,
       match.id,
-      match.game.getConfig('launchVerb'))
+      this.games[match.gameID].getConfig('launchVerb'))
   };
-
 
   for (var i = 0; i < match.playerUsernames.length; i += 1) {
     var playerUsername = match.playerUsernames[i];
@@ -329,12 +249,14 @@ GamesLobby.prototype.launchMatch = function(socket, session, match) {
 GamesLobby.prototype.bindMatchConnectionHandler = function(matchID) {
   console.log('Binding match socket.io connection handler for matchID=%s', matchID);
 
+  var match = this.matchManager.getMatch(matchID);
+
   // Add the socket.io namespaced listener, call gameInstance.connection but
   // ensure 'this' is bound to the gameInstance object.
   this.commandCenter.addNamespacedEventHandler(
     matchID,
     'connection',
-    this.matches[matchID].gameInstance.connection.bind(this.matches[matchID].gameInstance)
+    match.gameInstance.connection.bind(match.gameInstance)
   );
 };
 
@@ -362,88 +284,128 @@ GamesLobby.prototype.listGames = function(socket, session, eventData) {
 // TODO: data.game should be data.gameID.
 // TODO: data is not a well named variable.
 GamesLobby.prototype.createMatch = function(socket, session, eventData) {
-  var gameUuid;
+  console.log("Received createMatch", eventData);
 
   // Check the game name is one of the available games.
   if (_.has(this.games, eventData.gameID) === false) {
-    this.commandCenter.sendNotification(socket, util.format('No such game %s.', eventData.gameID), eventData.roomName);
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('No such game %s.', eventData.gameID),
+      eventData.roomName);
     return;
   }
 
-  // Instantiate a game for the match.
-  var matchID          = uuid.v4();
-  var Game             = this.games[eventData.gameID];
-  var gameInstance     = new Game(this);
-
   // Instantiate the match.
-  this.instatiateMatch ({
-    id:              matchID,
-    owner:           socket.username,
-    game:            Game,
-    gameInstance:    gameInstance,
-    gameID:          eventData.gameID,
-    state:           'WAITING',
-    created:         Date.now(),
-    playerUsernames: [socket.username]
-  });
+  var matchID = uuid.v4();
+  var match = this.matchManager.createMatch (
+    matchID,
+    eventData.gameID,
+    this.games[eventData.gameID],
+    socket.username);
 
   // Tell the requestor that the game was created.
   this.commandCenter.sendNotification(
     socket,
     util.format('Created match %s. Waiting for %s players.',
       eventData.gameID,
-      Game.getConfig('minPlayers')),
-      eventData.roomName);
+      match.minPlayers,
+      eventData.roomName));
 
   this.sendRoomWaitingMatches(eventData.roomName);
 };
 
 
 // A socket has requested the list of matches that are WAITING.
+// This is a text-based command.
 // TODO: Move display of this information to the client, remove server-side
 // formatting.
 GamesLobby.prototype.listWaitingMatches = function(socket, session, eventData) {
-  var waitingMatches = _.where(this.matches, {'state': 'WAITING'}),
-    formatStr,              // A formatter string.
-    msg,                    // The message to send back to the socket.
-    matchDescriptions = []; // Array of strings describing waiting matches.
+  var waitingMatches = this.matchManager.getWaitingMatches();
 
-
-  console.log('listWaitingMatches');
-  console.log(util.inspect(this.matches));
-
-  if (waitingMatches.length === 0) {
-    msg = 'There are no waiting matches at the moment. You can create one using /createMatch <game name>.';
-  } else {
-    waitingMatches.forEach(function (match) {
-      matchDescriptions.push(util.format('%s created by %s',
-                             match.gameID,
-                             match.owner));
-    });
-
-    if (waitingMatches.length === 1) {
-      formatStr = 'There is %s match waiting: %s';
-    } else {
-      formatStr = 'There are %s matches waiting: %s';
-    }
-
-    msg = util.format(
-      formatStr,
-      waitingMatches.length,
-      matchDescriptions.join(', '));
+  if (waitingMatches.length === undefined) {
+    this.commandCenter.sendNotification(
+      socket,
+      'There are no waiting matches at the moment. You can create one using '+
+      '/createMatch <game name>.',
+      eventData.roomName);
+    return;
   }
 
-  this.commandCenter.sendNotification(
-    socket,
-    msg,
-    eventData.roomName);
+  var matchDescriptions = _.map(waitingMatches, function(match) {
+    return util.format('%s created by %s',
+      match.gameID,
+      match.owner);
+  });
+
+  var isOrAre;
+  if (waitingMatches.length === 1) {
+    isOrAre = "is";
+  } else {
+    isOrAre = "are";
+  }
+
+  msg = util.format(
+    "There %s %d %s : ",
+    isOrAre,
+    waitingMatches.length,
+    pluralize('match', waitingMatches.length),
+    matchDescriptions.join(', '));
 };
 
 
+// This method is private since it does no safety checks on match.
+GamesLobby.prototype.addPlayerToMatch = function(username, match) {
+  this.matchManager.addPlayerToMatch(username, match);
+
+  this.commandCenter.notifyUsername(
+    match.owner,
+    util.format('%s has joined your game of %s.',
+      username,
+      match.gameID));
+
+  // Send the countdown to each player.
+  // TODO: Should this be done on the client side?
+  if (match.state === 'PLAYING') {
+    var secondsRemaining = 5;
+
+    var sendCountdown = function() {
+      var s;
+
+      if (secondsRemaining === 0) {
+        this.launchMatch(match);
+      } else {
+        var secondsRemainingStr = pluralize('second', secondsRemaining);
+
+        this.commandCenter.notifyUsername(
+          username,
+          util.format('%s\'s game of %s will begin in %s %s...',
+            match.owner,
+            match.gameID,
+            secondsRemaining,
+            secondsRemainingStr));
+
+        this.commandCenter.notifyUsername(
+          match.owner,
+          util.format('Your game of %s will begin in %s %s...',
+            match.gameID,
+            secondsRemaining,
+            secondsRemainingStr));
+
+        secondsRemaining -= 1;
+        setTimeout(sendCountdown, 1000);
+      }
+    }.bind(this);
+
+    sendCountdown();
+  }
+};
+
 // joinGame event handler.
 //
-// A socket has requested to join any WAITING game.
+// A socket has requested to join any WAITING game of a specific game ID.
 GamesLobby.prototype.joinGame = function(socket, session, eventData) {
+  console.log("Received joinGame", eventData);
+
   // Check the game exists.
   if (_.has(this.games, eventData.gameID) === false) {
     this.commandCenter.sendNotification(
@@ -454,23 +416,9 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
     return;
   }
 
-  // Sort WAITING matches based on created date.
-  var sortedWaitingMatches = _.where(
-    this.matches,
-    {'state': 'WAITING'}).sort(function(a,b) {
-      return a.created > b.created;
-    });
+  var matchToJoin = this.matchManager.getFirstWaitingMatchID(eventData.gameID);
 
-  // Pick the oldest WAITING match.
-  // TODO: There is probably a slightly more readable way to do this using underscore.
-  var matchToJoin = null;
-  sortedWaitingMatches.forEach( function (match) {
-    if(matchToJoin === null && match.gameID === eventData.gameID) {
-      matchToJoin = match;
-    }
-  });
-
-  if (matchToJoin === null) {
+  if (matchToJoin === undefined) {
     this.commandCenter.sendNotification(
       socket,
       util.format('Sorry, there there are no %s matches to join. ' +
@@ -479,8 +427,9 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
     return;
   }
 
-  this.addPlayerToMatch(socket, session, matchToJoin);
+  this.addPlayerToMatch(session.username, matchToJoin);
 };
+
 
 // joinMatch event handler.
 //
@@ -488,7 +437,8 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
 GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   console.log("Received joinMatch", eventData);
 
-  if (_.has(this.matches, eventData.matchID) === false) {
+  var match = this.matchManager.getMatch(eventData.matchID);
+  if (match === undefined) {
     this.commandCenter.sendNotification(
       socket,
       util.format('No such match %s.', eventData.matchID),
@@ -497,7 +447,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
     return;
   }
 
-  if (this.matches[eventData.matchID].state !== 'WAITING') {
+  if (match.state !== 'WAITING') {
     this.commandCenter.sendNotification(
       socket,
       util.format('That match has already started.'),
@@ -506,7 +456,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
     return;
   }
 
-  if (this.matches[eventData.matchID].owner === session.username) {
+  if (match.owner === session.username) {
     this.commandCenter.sendNotification(
       socket,
       util.format('You cannot join your own game.'),
@@ -515,27 +465,15 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
     return;
   }
 
-  this.addPlayerToMatch(socket, session, this.matches[eventData.matchID]);
-};
-
-
-// TODO: Move more of the instantiation logic into here.
-GamesLobby.prototype.instatiateMatch = function(matchData) {
-  var resultService = new ResultService(matchData.id, this.resultListener);
-
-  matchData.resultService = resultService;
-  this.matches[matchData.id] = matchData;
+  this.addPlayerToMatch(session.username, match);
 };
 
 GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
-  // Sort WAITING matches based on created date.
-  var sortedWaitingMatches = _.where(
-    this.matches,
-    {'state': 'WAITING'}).sort(function(a,b) {
-      return a.created > b.created;
-    });
+  // Sort WAITING matches based on creation date.
+  var waitingMatches = this.matchManager.getWaitingMatches();
 
-  this.commandCenter.roomEmit(roomName, 'roomMatchList', sortedWaitingMatches);
+  console.log("Sending waiting matches to %s", roomName, waitingMatches);
+  this.commandCenter.roomEmit(roomName, 'roomMatchList', waitingMatches);
 };
 
 GamesLobby.prototype.getPlayerRecord = function(socket, session, eventData) {
