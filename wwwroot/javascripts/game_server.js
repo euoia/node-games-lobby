@@ -3,7 +3,7 @@
 //
 define([], function() {
   // Pass in a instance of the command center.
-  function GameServer (commandCenter, options) {
+  function GameLobby (commandCenter, options) {
     this.commandCenter = commandCenter;
 
     // jQuery elements.
@@ -28,7 +28,7 @@ define([], function() {
   }
 
   // jQuery element initialisation.
-  GameServer.prototype.initRoomMatchList = function(users) {
+  GameLobby.prototype.initRoomMatchList = function(users) {
     $('<div id="roomMatchListTitle">Current games</div>')
       .appendTo(this.roomMatchListDiv);
 
@@ -38,7 +38,7 @@ define([], function() {
   // ----------------------
   // Commands.
   // ----------------------
-  GameServer.prototype.createMatch = function(gameID) {
+  GameLobby.prototype.createMatch = function(gameID) {
     console.log("createMatch gameID=%s", gameID);
     if (gameID === undefined) {
       this.commandCenter.addNotification(Date.now(), 'Must specify a game name.');
@@ -50,7 +50,7 @@ define([], function() {
     });
   };
 
-  GameServer.prototype.joinMatch = function(gameID) {
+  GameLobby.prototype.joinMatch = function(gameID) {
     if (gameID === undefined) {
       this.commandCenter.addNotification(Date.now(), 'Must specify a game name.');
       return;
@@ -64,12 +64,12 @@ define([], function() {
   // ----------------------
   // Listeners.
   // ----------------------
-  GameServer.prototype.launchGame = function(eventData) {
+  GameLobby.prototype.launchGame = function(eventData) {
     window.location.href = eventData.url;
   };
 
   // Receive the updated match list.
-  GameServer.prototype.roomMatchList = function(eventData) {
+  GameLobby.prototype.roomMatchList = function(eventData) {
     this.roomMatchListUl.html('');
 
     var joinMatch = function (matchID) {
@@ -91,6 +91,6 @@ define([], function() {
     }
   };
 
-  return GameServer;
+  return GameLobby;
 });
 
