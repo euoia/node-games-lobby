@@ -12,7 +12,7 @@ requirejs.config({
 define([
     'jquery',
     'command-center-client',
-    'game_server',
+    'GameLobby',
     'login',
     'throw_bananas'
   ], function($, CommandCenter, GameServer, Login, ThrowBananas) {
