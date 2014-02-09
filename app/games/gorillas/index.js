@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Fri 07 Feb 2014 10:07:23 AM EST
+// Last Modified:      Sun 09 Feb 2014 02:52:40 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -220,7 +220,8 @@ Gorillas.prototype.start = function () {
 
     player.socket.emit('matchStarted', {
       playerIdx: player.playerIdx,
-      usernames: [this.players[0].username, this.players[1].username]
+      usernames: [this.players[0].username, this.players[1].username],
+      returnURL: '/'
     });
   }
 
