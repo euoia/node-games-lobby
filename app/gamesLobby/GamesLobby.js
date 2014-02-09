@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 02:47:53 PM EST
+// Last Modified:      Sun 09 Feb 2014 02:59:14 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -428,6 +428,7 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
   }
 
   this.addPlayerToMatch(session.username, matchToJoin);
+  this.sendRoomWaitingMatches(eventData.roomName);
 };
 
 
@@ -466,6 +467,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   }
 
   this.addPlayerToMatch(session.username, match);
+  this.sendRoomWaitingMatches(eventData.roomName);
 };
 
 GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {

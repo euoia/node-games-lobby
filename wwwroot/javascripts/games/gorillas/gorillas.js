@@ -567,7 +567,7 @@ Gorillas.prototype.endOfGame = function(winningPlayerIdx) {
   this.banana.className = this.banana.className + "hoverHand";
   this.banana.addEventListener('mousedown', function() {
     location.href = this.returnURL;
-  });
+  }.bind(this));
 };
 
 Gorillas.prototype.emit = function(eventName, eventData) {
