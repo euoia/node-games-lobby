@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Sun 09 Feb 2014 02:52:40 PM EST
+// Last Modified:      Sun 09 Feb 2014 04:11:46 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -13,7 +13,10 @@
 // TODO: Handle observers (non-players) in the connection event.
 // TODO: Document the events emitted and received by this game.
 
-function Gorillas () {
+function Gorillas (resultService) {
+  // The result listener to which we publish the result of the match.
+  this.resultService = resultService;
+
   // Player array.
   // Value is player object.
   // Player object has the keys: username, socket, ready
@@ -21,7 +24,7 @@ function Gorillas () {
 
   // Which player has the first turn this round?
   // 0 => Player 0, 1 => Player 1.
-  this.startingPlayer = 0;
+  this.startingPlayer = null;
 
   // How many turns have passed?
   this.turnNumber = null;
@@ -201,6 +204,9 @@ Gorillas.prototype.endRound = function (socket, session) {
   if (this.enoughWins(this.otherPlayer())) {
     console.log("Player %d has enough wins, the match is over.", this.otherPlayer());
     this.emitAll('matchEnded', {winner: this.otherPlayer()});
+    this.resultService.setWinner(this.players[this.otherPlayer()].username);
+    this.resultService.setLoser(this.players[this.currentPlayer()].username);
+    this.resultService.publishResult();
   } else {
     this.nextRound();
   }
@@ -303,7 +309,13 @@ Gorillas.prototype.generateGorillaBuildings = function() {
 };
 
 Gorillas.prototype.nextRound = function() {
-  this.startingPlayer = this.randomIntBetween(0, 1);
+  // First starting player is random, then we alternate.
+  if (this.startingPlayer === null) {
+    this.startingPlayer = this.randomIntBetween(0, 1);
+  } else {
+    this.startingPlayer = (this.startingPlayer + 1) % 2;
+  }
+
   this.turnNumber = null;
 
   this.buildings = this.generateBuildings();

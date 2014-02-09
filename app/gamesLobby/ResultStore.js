@@ -32,11 +32,11 @@ ResultStore.prototype.getWins = function(username) {
 };
 
 ResultStore.prototype.getLosses = function(username) {
-  if (this.wins[username] === undefined) {
+  if (this.losses[username] === undefined) {
     return 0;
   }
 
-  return this.wins[username];
+  return this.losses[username];
 };
 
 module.exports = ResultStore;

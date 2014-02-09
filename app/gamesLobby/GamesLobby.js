@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 02:59:14 PM EST
+// Last Modified:      Sun 09 Feb 2014 04:10:48 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -145,6 +145,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   // 'result' event.
   this.resultListener = new EventEmitter();
   this.resultListener.on('result', function (eventData) {
+    console.log('Received result', eventData);
     this.resultStore.addWin(eventData.winner);
     this.resultStore.addLoss(eventData.loser);
   }.bind(this));
@@ -361,6 +362,12 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
     match.owner,
     util.format('%s has joined your game of %s.',
       username,
+      match.gameID));
+
+  this.commandCenter.notifyUsername(
+    username,
+    util.format("You joined %s's game of %s.",
+      match.owner,
       match.gameID));
 
   // Send the countdown to each player.
