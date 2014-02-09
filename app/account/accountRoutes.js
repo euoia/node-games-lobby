@@ -24,16 +24,16 @@ var validateUsername = function(username) {
 
 // AJAX login request.
 var login = exports.login = function(req, res) {
-  // TODO: Do a proper account lookup.
-  //
-  if (_.contains(chosen_usernames, req.body.username)) {
+  var username = req.body.username;
+
+  if (_.contains(chosen_usernames, username)) {
     return res.send({
       result: 'fail',
-      message: 'That username was already taken.'
+      message: 'That username is already taken.'
     });
   }
 
-  var validUsernameError = validateUsername(req.body.username);
+  var validUsernameError = validateUsername(username);
   if (validUsernameError !== 0) {
     return res.send({
       result: 'fail',
@@ -41,8 +41,9 @@ var login = exports.login = function(req, res) {
     });
   }
 
+  chosen_usernames.push(username);
 
-  req.session.username = req.body.username;
+  req.session.username = username;
   CommandCenter.initSession(req.session);
 
   res.send({
