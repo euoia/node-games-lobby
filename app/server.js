@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Sun 09 Feb 2014 11:08:34 AM EST
+//  Last Modified:      Sun 09 Feb 2014 11:16:23 AM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -65,7 +65,7 @@ app.configure(function() {
   app.set('port', process.env.PORT || 3000);
 
   // App global: Views directory.
-  app.set('views', __dirname + '/views');
+  app.set('views', __dirname);
 
   // App global: Which template engine to use?
   // EJS was chosen for its minimal DSL.
