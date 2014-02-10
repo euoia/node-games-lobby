@@ -319,7 +319,6 @@ Gorillas.prototype.mouseup = function(
    this.mouseupListener = null;
 
   // Clear the UI layer.
-  console.log("mouse up!");
   this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
 
   // Calculate the velocity from the mouse distance moved.
@@ -499,6 +498,11 @@ Gorillas.prototype.otherPlayer = function() {
 };
 
 Gorillas.prototype.nextRound = function() {
+  // Remove the mouseup listener in case it was bound and clear UI layer.
+  this.banana.removeEventListener('mouseup', this.mouseupListener);
+  this.mouseupListener = null;
+  this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
+
   this.turnNumber = null;
 
   this.initScreen();
