@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Mon 10 Feb 2014 08:30:41 am EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Mon 10 Feb 2014 08:31:06 am EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -58,7 +58,7 @@ var app = express();
 app.configure('production', function(){
   var config = require('../config/production.json');
   sessionSecret = config.sessionSecret;
-  console.log('Sourced production configuration.');
+  console.log('Loaded production configuration.');
 });
 
 var sessionStore = new RedisStore;
