@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Sun 09 Feb 2014 09:01:44 PM EST
+//  Last Modified:      Mon 10 Feb 2014 08:03:47 am EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -74,7 +74,7 @@ app.configure(function() {
   app.engine('html', require('ejs').renderFile);
 
   // App middleware: Not sure what this is. TODO: What is it?
-  app.use(express.favicon());
+  app.use(express.favicon(__dirname + '/../wwwroot/img/favicon.ico'));
 
   // App middleware: Not sure what this is. TODO: What is it?
   app.use(express.logger('dev'));
@@ -138,14 +138,6 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 // Create the socket.io server.
 var socketio = Socketio.listen(server);
-
-// No websockets.
-socketio.set('transports', [
-  'flashsocket',
-  'htmlfile',
-  'xhr-polling',
-  'jsonp-polling'
-]);
 
 var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 
