@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Mon 10 Feb 2014 08:03:47 am EST EST EST EST EST
+//  Last Modified:      Mon 10 Feb 2014 08:06:37 am EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -138,6 +138,11 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 // Create the socket.io server.
 var socketio = Socketio.listen(server);
+
+// Remove debug logging.
+io.configure('production', function(){
+  socketio.set('log level', 1);
+});
 
 var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 
