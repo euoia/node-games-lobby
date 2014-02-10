@@ -38,7 +38,7 @@ function Gorillas(options) {
 
   // Store the number of wins for each player.
   this.wins = [0, 0];
-  this.maxRounds = 3;
+  this.maxRounds = 5; // TODO: Move this to the server.
 
   // Added for network play.
   // Which player am I? 0 or 1.
