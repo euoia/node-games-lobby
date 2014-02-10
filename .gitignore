@@ -51,3 +51,7 @@ components
 # Live reload Config #
 ######################
 .livereload
+
+# Production config  #
+######################
+./config/production.json
