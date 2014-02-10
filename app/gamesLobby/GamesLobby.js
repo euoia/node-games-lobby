@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 09:15:38 PM EST
+// Last Modified:      Sun 09 Feb 2014 09:22:17 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -289,7 +289,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
   var playersNeeded = match.minPlayers - match.playerUsernames.length;
   this.commandCenter.sendNotification(
     socket,
-    util.format('Created match %s. Waiting %s more %s.',
+    util.format('Created match %s. Waiting for %s more %s.',
       eventData.gameID,
       playersNeeded,
       pluralize('player', playersNeeded)));
