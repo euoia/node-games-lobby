@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Sun 09 Feb 2014 11:16:23 AM EST
+//  Last Modified:      Sun 09 Feb 2014 09:01:44 PM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -138,6 +138,15 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 // Create the socket.io server.
 var socketio = Socketio.listen(server);
+
+// No websockets.
+socketio.set('transports', [
+  'flashsocket',
+  'htmlfile',
+  'xhr-polling',
+  'jsonp-polling'
+]);
+
 var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 
 // Create the game server, give it a handle to the express application and command center.
