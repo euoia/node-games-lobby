@@ -27,7 +27,6 @@
 			$(window).load (function () {
 				var pathElements = location.pathname.match(/\/gorillas\/(.*)\/(.*)/);
 				var matchID = pathElements[1];
-				io.set('transports', ['xhr-polling']);
 				var socket = io.connect('/' + matchID);
 
 				socket.on('connect', function() {
