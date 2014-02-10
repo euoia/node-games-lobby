@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Sun 09 Feb 2014 05:08:46 PM EST
+// Last Modified:      Sun 09 Feb 2014 08:51:01 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -37,7 +37,7 @@ function Gorillas (resultService, usernames) {
 
   // Store the number of wins for each player.
   this.wins = [0, 0];
-  this.maxRounds = 3;
+  this.maxRounds = 5;
 
   // The building data.
   this.buildings = null;
