@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Mon 10 Feb 2014 08:08:20 am EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Mon 10 Feb 2014 08:27:36 AM EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -41,9 +41,7 @@ var
 // Application configuration.
 
 // Session secret.
-// TODO: Put this in a build-specific config file that is not committed to the repository.
-//       - consider a hash of the box name?
-var secret = "put me in a config file";
+var sessionSecret = "this is just the dev secret";
 
 // Configure which games are available.
 // All games must conform to the 'Game object documentation', see game_server/index.js.
@@ -56,8 +54,14 @@ var games = [
 // --------------------------------------------------
 // Express boilerplate.
 var app = express();
-var cookieParser = express.cookieParser(secret);
+
+app.configure('production', function(){
+  var config = require('../config/production.json');
+  sessionSecret = config.sessionSecret;
+});
+
 var sessionStore = new RedisStore;
+var cookieParser = express.cookieParser(sessionSecret);
 
 // More express application boilerplate...
 app.configure(function() {
@@ -90,7 +94,7 @@ app.configure(function() {
   // TODO: Get the citation.
   app.use(cookieParser);
   app.use(express.session({
-    secret: secret,
+    secret: sessionSecret,
     store: sessionStore
   }));
 
@@ -139,7 +143,6 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 // Create the socket.io server.
 var socketio = Socketio.listen(server);
 
-// Remove debug logging.
 socketio.configure('production', function(){
   socketio.set('log level', 1);
 });
