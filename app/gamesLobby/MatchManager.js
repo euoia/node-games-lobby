@@ -34,7 +34,6 @@ MatchManager.prototype.createMatch = function(
   Game,
   owner
 ) {
-
   var match = {
     id:                matchID,
     gameID:            gameID,
@@ -61,6 +60,12 @@ MatchManager.prototype.addPlayerToMatch = function(username, match) {
   }
 };
 
+MatchManager.prototype.getMatchesByOwner = function(username) {
+  return _.filter(this.matches, function(match) {
+    return match.owner === username;
+  });
+};
+
 MatchManager.prototype.startPlayingMatch = function(match) {
   console.log('MatchManager startPlayingMatch', match);
   match.state = 'PLAYING';
@@ -77,6 +82,10 @@ MatchManager.prototype.startPlayingMatch = function(match) {
 
 MatchManager.prototype.getMatch = function(matchID) {
   return this.matches[matchID];
+};
+
+MatchManager.prototype.deleteMatch = function(matchID) {
+  delete this.matches[matchID];
 };
 
 // Return WAITING matches in order of their creation date.

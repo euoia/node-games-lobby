@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Feb 2014 09:22:17 PM EST
+// Last Modified:      Wed 12 Feb 2014 05:11:39 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -148,6 +148,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
     console.log('Received result', eventData);
     this.resultStore.addWin(eventData.winner);
     this.resultStore.addLoss(eventData.loser);
+    this.matchManager.deleteMatch(eventData.matchID);
   }.bind(this));
 
   // Send the room match list to players when they enter a room.
@@ -273,6 +274,15 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
     this.commandCenter.sendNotification(
       socket,
       util.format('No such game %s.', eventData.gameID),
+      eventData.roomName);
+    return;
+  }
+
+  // Check the player doesn't already have a match.
+  if (this.matchManager.getMatchesByOwner(session.username).length > 0) {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('You may only have one match at a time.'),
       eventData.roomName);
     return;
   }
