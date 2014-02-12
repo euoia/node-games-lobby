@@ -71,7 +71,6 @@ define(['ImageLoader'], function(ImageLoader) {
 
     // Out of bounds to the left or right.
     if (xpos > this.banana.width || xpos < 0) {
-      console.log("out of bounds");
       return;
     }
 
@@ -86,7 +85,6 @@ define(['ImageLoader'], function(ImageLoader) {
     if (time - startTime < 5000) {
       window.requestAnimationFrame(this.animateBanana.bind(this, startTime, startPoint, xVel, yVel));
     } else {
-      console.log("timeout");
     }
   };
 
