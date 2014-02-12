@@ -10,7 +10,7 @@
     "connect-redis": "~1.4.5",
     "session.socket.io": "git://github.com/euoia/session.socket.io.git",
     "underscore": "~1.4.3",
-    "command-center": "git://github.com/euoia/node-command-center#master",
+    "command-center": "*",
     "uuid": "~1.4.1",
     "sanitizer": "~0.1.1",
     "pluralize": "0.0.7",
