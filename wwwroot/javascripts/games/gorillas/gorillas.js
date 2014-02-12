@@ -498,9 +498,12 @@ Gorillas.prototype.otherPlayer = function() {
 };
 
 Gorillas.prototype.nextRound = function() {
-  // Remove the mouseup listener in case it was bound and clear UI layer.
+  // Remove any listeners.
+  this.banana.removeEventListener('mousedown', this.mousedownListener);
+  this.mousedownListener = null;
   this.banana.removeEventListener('mouseup', this.mouseupListener);
   this.mouseupListener = null;
+
   this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
 
   this.turnNumber = null;

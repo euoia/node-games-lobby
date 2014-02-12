@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 12 Feb 2014 05:11:39 PM EST
+// Last Modified:      Wed 12 Feb 2014 06:21:53 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -471,6 +471,23 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
       eventData.roomName);
 
     return;
+  }
+
+  // Now join the match.
+
+  // Did any matches the player had started.
+  var didDeleteAMatch = false;
+  this.matchManager.getMatchesByOwner(session.username).forEach(function (match) {
+      console.log("Deleting match", match);
+    didDeleteAMatch = true;
+    this.matchManager.deleteMatch(match.id);
+  }.bind(this));
+
+  if (didDeleteAMatch) {
+    this.commandCenter.sendNotification(
+      socket,
+      util.format('Stopped your own match'),
+      eventData.roomName);
   }
 
   this.addPlayerToMatch(session.username, match);
