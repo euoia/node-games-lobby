@@ -49,3 +49,7 @@ In the future maybe
 * Use an automatic documentation generator.
 * Use proper private and public variables and methods.
 * Command center client could ask server for command list.
+
+License
+----
+MIT.
