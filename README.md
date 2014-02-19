@@ -50,6 +50,11 @@ In the future maybe
 * Use proper private and public variables and methods.
 * Command center client could ask server for command list.
 
+TODO
+----
+Many TODOs are contained inline in the JavaScript. The most pressing item is to
+update the tests.
+
 License
 ----
 MIT.
