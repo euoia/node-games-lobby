@@ -4,20 +4,19 @@ A matchmaking server and lobby for finding and playing multiplayer online games
 in a web browser using simple HTML and javascript.
 
 The games must be written in nodejs (or at least have a nodejs adapter) and
-conform to a simple API (TODO: link game API documentation).
+conform to a simple API.
 
 Features
 ----
 * Chat across games with private messages, announcements, lobbies, public rooms.
 * Games must conform only to a simple documented API.
-* Example games (tictactoe, TODO: hangman) provided.
+* Example games (tictactoe, gorillas) provided.
 
 To use this
 ----
 * Clone this repository.
 * Run `npm install`
 * Run `npm test` requires [mocha](http://visionmedia.github.io/mocha/) installed globally.
-* Look at the game documentation (TODO: link).
 * Look at the example tictactoe and hangman games.
 * Write your game to conform to the documented game API.
 * Run this program on a web server somewhere.
@@ -49,11 +48,6 @@ In the future maybe
 * Use an automatic documentation generator.
 * Use proper private and public variables and methods.
 * Command center client could ask server for command list.
-
-TODO
-----
-Many TODOs are contained inline in the JavaScript. The most pressing item is to
-update the tests.
 
 License
 ----
