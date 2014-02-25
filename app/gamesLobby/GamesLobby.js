@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 12 Feb 2014 06:21:53 PM EST
+// Last Modified:      Tue 25 Feb 2014 01:23:13 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -153,6 +153,13 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
 
   // Send the room match list to players when they enter a room.
   this.commandListener.on('subscribe', function(eventData) {
+    this.sendRoomWaitingMatches(eventData.roomName);
+  }.bind(this));
+
+  // Delete a player's matches when they disconnect.
+  this.commandListener.on('disconnect', function(eventData) {
+    console.log("Player %s has disconnected, deleting their matches.", eventData.username);
+    this.matchManager.deleteMatchesOwnedByPlayer(eventData.username);
     this.sendRoomWaitingMatches(eventData.roomName);
   }.bind(this));
 
@@ -452,6 +459,8 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
       util.format('No such match %s.', eventData.matchID),
       eventData.roomName);
 
+    console.log("this.matchManager.matches=", this.matchManager.matches);
+
     return;
   }
 
@@ -495,6 +504,8 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
 };
 
 GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
+  console.log("this.matchManager.matches=", this.matchManager.matches);
+
   // Sort WAITING matches based on creation date.
   var waitingMatches = this.matchManager.getWaitingMatches();
 
