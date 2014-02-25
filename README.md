@@ -17,7 +17,7 @@ To use this
 * Clone this repository.
 * Run `npm install`
 * Run `npm test` requires [mocha](http://visionmedia.github.io/mocha/) installed globally.
-* Look at the example tictactoe and hangman games.
+* Look at the example tictactoe and gorillas games.
 * Write your game to conform to the documented game API.
 * Run this program on a web server somewhere.
 * Get people into the lobby and playing games.
@@ -31,22 +31,19 @@ Why would this be useful to you?
 
 To be completed
 ----
-* Accounts module with statistics
-* Database storage
-* More game examples
+* Accounts module.
+* Database storage.
+* More game examples.
 * Wiki documentation, which explains which bits to modify.
 
 In the future maybe
 ----
-* Use a sensible theme for the ecosystem because generic names
-  ('node-games-lobby', 'node-command-center') are indistinctive, hard to
-  remember, and can only be used once.
+* Better naming conventions for the ecosystem, node-games-lobby and
+  node-command-center are indistinct.
 * Handle games with more than 2 players.
 * Player and game sharing with other lobbies.
 * Better account management features.
 * A webservice API for games and account handling.
-* Use an automatic documentation generator.
-* Use proper private and public variables and methods.
 * Command center client could ask server for command list.
 
 License
