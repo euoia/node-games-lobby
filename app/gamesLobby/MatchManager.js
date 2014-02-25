@@ -88,6 +88,14 @@ MatchManager.prototype.deleteMatch = function(matchID) {
   delete this.matches[matchID];
 };
 
+MatchManager.prototype.deleteMatchesOwnedByPlayer = function(username) {
+  _.each(this.matches, function(match, matchID) {
+    if (match.owner === username) {
+      delete this.matches[matchID];
+    }
+  }.bind(this));
+};
+
 // Return WAITING matches in order of their creation date.
 // gameID is optional.
 MatchManager.prototype.getWaitingMatches = function(gameID) {
