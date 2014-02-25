@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Mon 10 Feb 2014 08:31:06 am EST EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Tue 25 Feb 2014 12:38:13 PM EST EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -143,6 +143,15 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 // Create the socket.io server.
 var socketio = Socketio.listen(server);
+
+// No websockets.
+socketio.set('transports', [
+  'flashsocket',
+  'htmlfile',
+  'xhr-polling',
+  'jsonp-polling'
+]);
+
 
 socketio.configure('production', function(){
   socketio.set('log level', 1);
