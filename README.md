@@ -1,10 +1,9 @@
 node-games-lobby
 =================
-A matchmaking server and lobby for finding and playing multiplayer online games
-in a web browser using simple HTML and javascript.
+A matchmaking server and chat system for multiplayer online games.
 
-The games must be written in nodejs (or at least have a nodejs adapter) and
-conform to a simple API.
+The games must have a NodeJS back-end that implements a small number of methods
+required by the server.
 
 Features
 ----
