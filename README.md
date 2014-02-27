@@ -9,7 +9,7 @@ Features
 ----
 * Chat across games with private messages, announcements, lobbies, public rooms.
 * Games must conform only to a simple documented API.
-* Example games (tictactoe, gorillas) provided.
+* Example games (tictactoe and gorillas) provided.
 
 To use this
 ----
