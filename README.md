@@ -17,6 +17,7 @@ To use this
 * Run `npm install`
 * Run `npm test` requires [mocha](http://visionmedia.github.io/mocha/) installed globally.
 * Look at the example tictactoe and gorillas games.
+* Fork the repository.
 * Write your game to conform to the documented game API.
 * Run this program on a web server somewhere.
 * Get people into the lobby and playing games.
