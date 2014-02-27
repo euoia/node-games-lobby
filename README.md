@@ -31,7 +31,7 @@ Why would this be useful to you?
 
 To be completed
 ----
-* Accounts module.
+* An accounts module.
 * Database storage.
 * More game examples.
 * Wiki documentation, which explains which bits to modify.
