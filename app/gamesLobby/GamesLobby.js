@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Tue 25 Feb 2014 01:23:13 PM EST
+// Last Modified:      Fri 07 Mar 2014 12:16:32 PM EST
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -344,12 +344,14 @@ GamesLobby.prototype.listWaitingMatches = function(socket, session, eventData) {
     isOrAre = "are";
   }
 
-  msg = util.format(
+  var msg = util.format(
     "There %s %d %s : ",
     isOrAre,
     waitingMatches.length,
     pluralize('match', waitingMatches.length),
     matchDescriptions.join(', '));
+
+  this.commandCenter.sendNotification(socket, msg);
 };
 
 
