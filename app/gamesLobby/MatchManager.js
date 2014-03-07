@@ -67,7 +67,6 @@ MatchManager.prototype.getMatchesByOwner = function(username) {
 };
 
 MatchManager.prototype.startPlayingMatch = function(match) {
-  console.log('MatchManager startPlayingMatch', match);
   match.state = 'PLAYING';
 
   // Instantiate a ResultService for the game instance to use.
@@ -104,14 +103,12 @@ MatchManager.prototype.getWaitingMatches = function(gameID) {
     whereClause.gameID = gameID;
   }
 
-  var waitingMatches = _.where(
-    this.matches,
-    whereClause
-  ).sort(function(a,b) {
-    return a.creationDate > b.creationDate;
-  });
+  var waitingMatches = _.chain(this.matches)
+  .where(whereClause)
+  .sortBy('creationDate')
+  .value();
 
-  if (waitingMatches === undefined) {
+  if (waitingMatches === null) {
     waitingMatches = [];
   }
 
@@ -119,21 +116,19 @@ MatchManager.prototype.getWaitingMatches = function(gameID) {
 };
 
 // Return the oldest WAITING match ID.
-// gameIS is optional.
+// gameID is optional.
 MatchManager.prototype.getFirstWaitingMatch = function(gameID) {
   var whereClause = {state: 'WAITING'};
-  if (gameID !== undefined) {
-    whereClause.gameID = gameID;
-  }
+  //if (gameID !== undefined) {
+  //  whereClause.gameID = gameID;
+  //}
 
-  firstMatch = _.findWhere(
-    this.matches,
-    whereClause
-  ).sort(function(a,b) {
-    return a.creationDate > b.creationDate;
-  });
+  var matches = _.chain(this.matches)
+    .where(whereClause)
+    .sortBy('creationDate')
+    .value();
 
-  return firstMatch;
+  return matches[0];
 };
 
 module.exports = MatchManager;
