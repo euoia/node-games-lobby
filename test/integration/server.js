@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 06:08:06 PM GMT
-//  Last Modified:      Fri 07 Mar 2014 01:40:52 PM EST
+//  Last Modified:      Fri 07 Mar 2014 01:59:02 PM EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -22,7 +22,7 @@ process.env.PORT = serverPort;
 // Use production settings to minimize logging.
 process.env.NODE_ENV = 'production';
 
-var app = require('../app/server.js'),
+var app = require('../../app/server.js'),
   assert = require('assert'),
   superagent = require('superagent'),
   should = require('should'),

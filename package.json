@@ -23,7 +23,7 @@
     "socket.io-client": "https://github.com/euoia/socket.io-client#0.9"
   },
   "scripts": {
-    "test": "cd test && mocha app.js",
+    "test": "cd test && mocha integration/server.js",
     "start": "node app/server.js",
     "postinstall": "bower install"
   }

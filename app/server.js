@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Tue 25 Feb 2014 01:29:33 PM EST EST EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Fri 07 Mar 2014 01:45:11 PM EST EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -151,6 +151,9 @@ socketio.set('transports', [
   'xhr-polling',
   'jsonp-polling'
 ]);
+
+// Default logging.
+socketio.set('log level', 2);
 
 socketio.configure('production', function(){
   socketio.set('log level', 1);
