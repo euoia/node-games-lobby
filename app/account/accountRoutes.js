@@ -26,6 +26,8 @@ var validateUsername = function(username) {
 var login = exports.login = function(req, res) {
   var username = req.body.username;
 
+  console.log("[accountRoutes] login attempt [%s]", username);
+
   if (_.contains(chosen_usernames, username)) {
     return res.send({
       result: 'fail',
@@ -49,6 +51,8 @@ var login = exports.login = function(req, res) {
   res.send({
     result: 'ok'
   });
+
+  console.log("[accountRoutes] login success [%s]", username);
 };
 
 // AJAX logout request.
