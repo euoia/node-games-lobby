@@ -5,11 +5,11 @@
   "dependencies": {
     "express": "3.0.3",
     "ejs": "*",
-    "socket.io": "~0.9.13",
+    "socket.io": "0.9.13",
     "less-middleware": "~0.1.9",
     "connect-redis": "~1.4.5",
-    "session.socket.io": "git://github.com/euoia/session.socket.io.git",
-    "underscore": "~1.4.3",
+    "session.socket.io": "0.1.6",
+    "underscore": "~1.6.0",
     "command-center": "*",
     "uuid": "~1.4.1",
     "sanitizer": "~0.1.1",
@@ -19,8 +19,9 @@
   "devDependencies": {
     "mocha": "~1.5.0",
     "should": "~1.2.0",
-    "superagent": "*",
-    "socket.io-client": "https://github.com/euoia/socket.io-client#0.9"
+    "superagent": "0.17.0",
+    "socket.io-client": "0.9.16",
+    "unirest": "~0.1.8"
   },
   "scripts": {
     "test": "cd test && mocha integration/server.js",
