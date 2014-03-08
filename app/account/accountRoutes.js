@@ -29,6 +29,7 @@ var login = exports.login = function(req, res) {
   console.log("[accountRoutes] login attempt [%s]", username);
 
   if (_.contains(chosen_usernames, username)) {
+  console.log("[accountRoutes] login fail [%s]", username);
     return res.send({
       result: 'fail',
       message: 'That username is already taken.'
