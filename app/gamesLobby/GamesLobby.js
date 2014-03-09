@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Fri 07 Mar 2014 01:41:19 PM EST
+// Last Modified:      Sun 09 Mar 2014 09:52:48 AM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -273,9 +273,11 @@ GamesLobby.prototype.listGames = function(socket, session, eventData) {
 // TODO: data is not a well named variable.
 GamesLobby.prototype.createMatch = function(socket, session, eventData) {
   console.log("[GamesLobby] <= createMatch [%s] [%s]", session.username, eventData.gameID);
+  console.dir(eventData);
 
   // Check the game name is one of the available games.
   if (_.has(this.games, eventData.gameID) === false) {
+    console.log("[GamesLobby] createMatch [%s] fail: no such game %s", session.username, eventData.gameID);
     this.commandCenter.sendNotification(
       socket,
       util.format('No such game %s.', eventData.gameID),
@@ -285,6 +287,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
 
   // Check the player doesn't already have a match.
   if (this.matchManager.getMatchesByOwner(session.username).length > 0) {
+    console.log("[GamesLobby] createMatch [%s] fail: player may only have one match", session.username);
     this.commandCenter.sendNotification(
       socket,
       util.format('You may only have one match at a time.'),
@@ -310,6 +313,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
       pluralize('player', playersNeeded)));
 
   this.sendRoomWaitingMatches(eventData.roomName);
+  console.log("[GamesLobby] createMatch success");
 };
 
 
