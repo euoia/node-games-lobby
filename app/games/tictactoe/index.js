@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 02:34:01 PM EDT
+// Last Modified:      Tue 11 Mar 2014 02:36:53 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -66,7 +66,6 @@ function Tictactoe (resultService, usernames) {
   };
 
   console.log("[Tictactoe] Constructor");
-  console.dir(this);
 }
 
 Tictactoe.prototype.getPlayerByUsername = function(username) {
