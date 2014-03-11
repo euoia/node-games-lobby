@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 11:13:25 AM EDT
+// Last Modified:      Tue 11 Mar 2014 02:34:01 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -22,13 +22,28 @@ var config = {
   launchVerb: 'play'
 };
 
-function Tictactoe () {
-  // Player collection. Key is username, value is player object.
-  // Player object has the keys: username, socket.
-  this.players = {};
+function Tictactoe (resultService, usernames) {
+  // The result listener to which we publish the result of the match.
+  this.resultService = resultService;
 
-  this.nextPlayer = null; // Username of player who's turn is next.
-  this.playerUsernames = []; // Array of player usernames.
+  // Array containing the usernames that are part of this match.
+  this.usernames = usernames;
+
+  // Either OK or FINISHED.
+  this.gameState = 'OK';
+
+  // Player array.
+  // Value is player object.
+  // Player object has the keys: username, socket.
+  // TODO: May be simpler to store players in an object.
+  this.players = [];
+
+  // Which player has the first turn this round?
+  // 0 => Player 0, 1 => Player 1.
+  this.startingPlayer = null;
+
+  // How many turns have passed?
+  this.turnNumber = null;
 
   // Map board ownership. Tiles are assigned the owner's username.
   this.board = {
@@ -44,39 +59,28 @@ function Tictactoe () {
   };
 
   // Socket handlers and routes.
-  // TODO: This might not work!
+  // TODO: This could be cleaner.
   this.socketEventHandlers = {
+    'disconnect': this.disconnect,
     'select': this.select
   };
 
-  this.routes = {
-    'play': this.landingPage
-  };
+  console.log("[Tictactoe] Constructor");
+  console.dir(this);
 }
 
-// --------------------------------------------------
-// Express routes.
-
-// Express request route that loads the game page.
-Tictactoe.prototype.landingPage = function (req, res) {
-  if (req.session.username === undefined) {
-    // TODO: This should probably be handled at a different layer.
-    return res.send(403, 'You must login before you can view games.');
+Tictactoe.prototype.getPlayerByUsername = function(username) {
+  for (var i = 0; i < this.players.length; i += 1) {
+    var player = this.players[i];
+    if (player.username === username) {
+      return player;
+    }
   }
-
-  var username = req.session.username;
-
-  // Add the player.
-  this.addPlayer(username);
-
-  // Render the view.
-  console.log('[Tictactoe] landingPage [%s]', username);
-  return res.render('games/tictactoe/index', { title: 'Tictactoe' });
+  return null;
 };
 
-
 // --------------------------------------------------
-// Methods required by the game object API.
+// Methods required by the GamesLobby API.
 
 // Game.getConfig(configName)
 // Return a game configuration item.
@@ -85,9 +89,11 @@ Tictactoe.getConfig = function(configName) {
 };
 
 // Game.prototype.connection(err, socket, session)
-// After the player loads the tictactoe landing page page, the client-side
-// JavaScript makes a socket.io connection to the game lobby with a socket.io
-// namespace of this matchID.
+// After the player loads the <launchVerb> page, the client-side JavaScript
+// makes a socket.io connection to the game lobby with a socket.io namespace of
+// this matchID.
+//
+// TODO: A lot of this function is boilerplate and could be refactored.
 Tictactoe.prototype.connection = function(err, socket, session) {
   if (session === undefined) {
     console.log("[Tictactoe] <= connection [%s] Error: %s",
@@ -104,54 +110,83 @@ Tictactoe.prototype.connection = function(err, socket, session) {
     return;
   }
 
-  var player = this.players[session.username];
-  if (player === undefined) {
-    console.log('[Tictactoe] <= connection [%s]: Error %s',
-      'Socket connection before landingPage()');
-    return;
+  // Add the player. The socket will connect once the page has loaded.
+  if (this.getPlayerByUsername(session.username) === null) {
+    this.players.push({
+      username: session.username,
+      socket: socket,
+      playerIdx: this.players.length
+    });
+  } else {
+    // TODO: Resume the game.
   }
 
-  player.socket = socket;
-
   // Set up socket event handlers for this player.
+  // TODO: The interface here could be better.
   for (var event in this.socketEventHandlers) {
     if (this.socketEventHandlers.hasOwnProperty(event)) {
       var eventHandler = this.socketEventHandlers[event];
       socket.on(event, eventHandler.bind(this, socket, session));
-      console.log('[Tictactoe] <= connection [%s]: bind [%s]', player.username, event);
+      console.log('[Tictactoe] <= connection [%s]: bind [%s]',
+        session.username,
+        event);
     }
   }
 
-  // If the game has 2 players we can start.
-  // TODO: Surely this won't work because we'll have 2 players as soon as the
-  // page is loaded (see addPlayer call)?
-  if (Object.keys(this.players).length === 2) {
+  if (this.players.length === 2) {
+    console.log("[Tictactoe] <= connection [%s]: Both players are now connected",
+      session.username);
     this.start();
   }
 };
 
 // Return the URL routes required by this game.
 Tictactoe.prototype.getRoutes = function() {
-  return this.routes;
+  return {'play': this.play};
 };
 
 // --------------------------------------------------
-// Socket helper methods.
+// Express routes.
 
-// Emit an event to all players.
-Tictactoe.prototype.emitAll = function (event, data) {
-  for (var username in this.players) {
-    this.players[username].socket.emit(event, data);
+// Express request route that loads the game page.
+// TODO: Possibly rename to index.
+Tictactoe.prototype.play = function (req, res) {
+  if (req.session.username === undefined) {
+    // TODO: This should probably be handled at a different layer.
+    return res.send(403, 'You must login before you can view games.');
   }
+
+  // Render the game page.
+  console.log('[Tictactoe] play [%s]: rendering view', req.session.username);
+  return res.render('games/tictactoe/index', { title: 'Tictactoe' });
 };
 
 // --------------------------------------------------
 // Socket event handlers.
+
+// Player has disconnected from the game.
+Tictactoe.prototype.disconnect = function(socket, session) {
+  if (this.gameState === 'FINISHED') {
+    return;
+  }
+
+  // Find the winner.
+  var winnerIdx = (this.usernames.indexOf(session.username) + 1) % 2;
+  var winnerUsername = this.usernames[winnerIdx];
+
+  // Disconnection results in forfeiting the game.
+  this.endMatch(winnerUsername, session.username);
+
+  console.log("[Tictactoe] <= disconnect [%s]: Assigning win [%s]",
+    session.username,
+    winnerUsername);
+};
+
 Tictactoe.prototype.select = function (socket, session, eventData) {
   var winResult;
   console.log('[Tictactoe] <= select [%s] [%s]', session.username, eventData.id);
 
-  if (session.username !== this.nextPlayer) {
+  if (session.username !== this.currentPlayer()) {
     return socket.emit('error', {msg: 'It is not your turn.'});
   }
 
@@ -166,50 +201,94 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
 
   winResult = this.checkWin(session.username);
   if (winResult.win === true) {
-    return this.emitAll('victory', {player: session.username, type: winResult.type, val: winResult.val});
+    console.log("[Tictactoe] <= select [%s]: win", session.username);
+
+    this.resultService.publishResult({
+      winner: this.currentPlayer(),
+      loser: this.otherPlayer()
+    });
+
+    this.emitAll('victory', {
+      player: session.username,
+      type: winResult.type,
+      val: winResult.val});
+
+    this.gameState = 'FINISHED';
+    return;
   }
 
   if (this.isStalemate() === true) {
-    return this.emitAll('end', {msg: 'The game ended in stalemate.'});
+    console.log("[Tictactoe] <= select [%s]: stalemate", session.username);
+
+    this.resultService.publishDrawResult({
+      drawers: this.usernames
+    });
+
+    this.emitAll('end', {
+      msg: 'The game ended in stalemate.'
+    });
+
+    this.gameState = 'FINISHED';
+    return;
   }
 
   // Pass the move to the next player.
-  var nextPlayerIdx = (this.playerUsernames.indexOf(session.username) + 1) % 2;
-  this.nextPlayer = this.playerUsernames[nextPlayerIdx];
-
+  this.nextTurn();
   this.emitAll('nextRound', {
-    nextPlayer: this.nextPlayer
+    nextPlayer: this.currentPlayer()
   });
 };
 
 // --------------------------------------------------
-// Game play methods.
-Tictactoe.prototype.addPlayer = function(username) {
-  this.players[username] = {
-    username: username,
-    socket:   null
-  };
+// Socket helper methods.
+
+// Emit an event to all players.
+Tictactoe.prototype.emitAll = function (event, data) {
+  for (var i = 0, l = this.players.length; i < l; i += 1) {
+    console.log("emitAll");
+    console.dir(data);
+    this.players[i].socket.emit(event, data);
+  }
 };
+
+// --------------------------------------------------
+// Game play methods.
 
 // Start the game.
 Tictactoe.prototype.start = function () {
   // Send each player their own username.
-  for (var username in this.players) {
-    this.players[username].socket.emit('playerInfo', {username: username});
+  for (var i = 0, l = this.players.length; i < l; i += 1) {
+    this.players[i].socket.emit('playerInfo',
+      {username: this.players[i].username}
+    );
   }
 
-  this.emitAll('start', {});
+  this.emitAll('start');
+  this.nextTurn();
 
   // Tell the players who's turn it is next.
-  this.playerUsernames = Object.keys(this.players);
-  this.nextPlayer = this.playerUsernames[Math.floor(Math.random() * 2)];
-  console.log('It is %s\'s turn.', this.nextPlayer);
+  console.log("It is %s's turn.", this.currentPlayer());
 
   this.emitAll('nextRound', {
-    nextPlayer: this.nextPlayer
+    nextPlayer: this.currentPlayer()
   });
 };
 
+Tictactoe.prototype.nextTurn = function() {
+  if (this.turnNumber === null) {
+    this.turnNumber = 1;
+  }
+
+  this.turnNumber += 1;
+};
+
+Tictactoe.prototype.currentPlayer = function() {
+  return this.players[(this.turnNumber + this.startingPlayer) % 2].username;
+};
+
+Tictactoe.prototype.otherPlayer = function() {
+  return this.players[(this.turnNumber + this.startingPlayer + 1) % 2].username;
+};
 
 // Check for a win. Returns either:
 //   { win: false }
@@ -221,38 +300,45 @@ Tictactoe.prototype.checkWin = function(username) {
   var b = this.board,
     u = username;
 
+  // Top row.
   if (b.topLeft === u && b.topMiddle === u && b.topRight === u) {
     return {win: true, type: 'row', val: 0};
   }
 
+  // Center row.
   if (b.centerLeft === u && b.centerMiddle === u && b.centerRight === u) {
     return {win: true, type: 'row', val: 1};
   }
 
+  // Bottom row.
   if (b.bottomLeft === u && b.bottomMiddle === u && b.bottomRight === u) {
     return {win: true, type: 'row', val: 2};
   }
 
+  // Left col.
   if (b.topLeft === u && b.centerLeft === u && b.bottomLeft === u) {
     return {win: true, type: 'col', val: 0};
   }
 
+  // Middle col.
   if (b.topMiddle === u && b.centerMiddle === u && b.bottomMiddle === u) {
     return {win: true, type: 'col', val: 1};
   }
 
-  if (b.topMiddle === u && b.bottomMiddle === u && b.bottomMiddle === u) {
+  // Right col.
+  if (b.topRight === u && b.centerRight === u && b.bottomRight === u) {
     return {win: true, type: 'col', val: 2};
   }
 
+  // Diag 1.
   if (b.topLeft === u && b.centerMiddle === u && b.bottomRight === u) {
     return {win: true, type: 'diag', val: 0};
   }
 
+  // Diag 2.
   if (b.bottomLeft === u && b.centerMiddle === u && b.topRight === u) {
     return {win: true, type: 'diag', val: 1};
   }
-
 
   return {win: false};
 };
@@ -272,6 +358,9 @@ Tictactoe.prototype.isStalemate = function() {
   if (isStalemate) {
     return true;
   }
+};
+
+Tictactoe.prototype.endMatch = function(winner, loser) {
 };
 
 module.exports = Tictactoe;
