@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Thu 06 Feb 2014 11:23:50 AM EST
+// Last Modified:      Tue 11 Mar 2014 11:13:25 AM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -70,7 +70,7 @@ Tictactoe.prototype.landingPage = function (req, res) {
   this.addPlayer(username);
 
   // Render the view.
-  console.log('tictactoe: %s loaded the launch page.', username);
+  console.log('[Tictactoe] landingPage [%s]', username);
   return res.render('games/tictactoe/index', { title: 'Tictactoe' });
 };
 
@@ -89,16 +89,25 @@ Tictactoe.getConfig = function(configName) {
 // JavaScript makes a socket.io connection to the game lobby with a socket.io
 // namespace of this matchID.
 Tictactoe.prototype.connection = function(err, socket, session) {
-  console.log('Tictactoe: Connection from %s.', session.username);
+  if (session === undefined) {
+    console.log("[Tictactoe] <= connection [%s] Error: %s",
+      socket.handshake.address.address,
+      'session was undefined');
+    return;
+  }
 
   if (err) {
-    // TODO: What kind of errors could occur here?
-    throw err;
+    console.log('[Tictactoe] <= connection [%s] [%s] Error: %s',
+      session.username,
+      socket.handshake.address.address,
+      err.message);
+    return;
   }
 
   var player = this.players[session.username];
   if (player === undefined) {
-    console.log('tictactoe game: Error: Socket connection without player loading game page.');
+    console.log('[Tictactoe] <= connection [%s]: Error %s',
+      'Socket connection before landingPage()');
     return;
   }
 
@@ -109,7 +118,7 @@ Tictactoe.prototype.connection = function(err, socket, session) {
     if (this.socketEventHandlers.hasOwnProperty(event)) {
       var eventHandler = this.socketEventHandlers[event];
       socket.on(event, eventHandler.bind(this, socket, session));
-      console.log('tictactoe game: Bound event %s for user %s.', event, player.username);
+      console.log('[Tictactoe] <= connection [%s]: bind [%s]', player.username, event);
     }
   }
 
@@ -119,7 +128,6 @@ Tictactoe.prototype.connection = function(err, socket, session) {
   if (Object.keys(this.players).length === 2) {
     this.start();
   }
-
 };
 
 // Return the URL routes required by this game.
@@ -141,7 +149,7 @@ Tictactoe.prototype.emitAll = function (event, data) {
 // Socket event handlers.
 Tictactoe.prototype.select = function (socket, session, eventData) {
   var winResult;
-  console.log('%s selected %s.', session.username, eventData.id);
+  console.log('[Tictactoe] <= select [%s] [%s]', session.username, eventData.id);
 
   if (session.username !== this.nextPlayer) {
     return socket.emit('error', {msg: 'It is not your turn.'});
@@ -185,8 +193,6 @@ Tictactoe.prototype.addPlayer = function(username) {
 
 // Start the game.
 Tictactoe.prototype.start = function () {
-  console.log('Tictactoe start');
-
   // Send each player their own username.
   for (var username in this.players) {
     this.players[username].socket.emit('playerInfo', {username: username});
