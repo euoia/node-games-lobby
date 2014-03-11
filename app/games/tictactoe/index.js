@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 02:38:04 PM EDT
+// Last Modified:      Tue 11 Mar 2014 02:44:20 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -242,8 +242,6 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
 // Emit an event to all players.
 Tictactoe.prototype.emitAll = function (event, data) {
   for (var i = 0, l = this.players.length; i < l; i += 1) {
-    console.log("emitAll");
-    console.dir(data);
     this.players[i].socket.emit(event, data);
   }
 };
