@@ -6,14 +6,23 @@ var io = require('socket.io-client'),
 function Player(options) {
   this.serverAddress = options.serverAddress;
   this.username = options.username;
+  this.manager = options.manager;
 
-  // One of: CONNECTING, IN_LOBBY, WAITING, IN_GAME
+  // One of: CONNECTING, IN_LOBBY, WAITING, IN_GAME, FINISHED
   this.state = 'CONNECTING';
+
+  this.actionTimeoutMin = 10000;
+  this.actionTimeoutMax = 20000;
+
+  // Having joined a match, record the URL.
+  this.matchUrl = null;
 
   this.actionFunctions = {
     'IN_LOBBY': [
       this.saySomething.bind(this),
-      this.createMatch.bind(this)
+      this.createMatch.bind(this),
+      this.joinGame.bind(this),
+      this.disconnect.bind(this)
     ],
     'WAITING': [
       this.saySomething.bind(this)
@@ -70,9 +79,11 @@ Player.prototype.connectSocket = function(cb) {
   });
 
   this.socket.once('connect', function() {
-    console.log("[%s] Socket connected", this.username);
+    console.log("[%s] Socket connected to lobby", this.username);
     cb();
   }.bind(this));
+
+  this.socket.on('launchMatch', this.launchMatch.bind(this));
 };
 
 Player.prototype.subscribe = function(cb) {
@@ -86,6 +97,10 @@ Player.prototype.subscribe = function(cb) {
 
 // Do one of the available actions.
 Player.prototype.doAction = function() {
+  if (this.state === 'FINISHED') {
+    return;
+  }
+
   var possibleActions = this.actionFunctions[this.state];
   if (possibleActions === undefined) {
     console.log("[%s] No possible actions in state=%s", this.username, this.state);
@@ -96,7 +111,10 @@ Player.prototype.doAction = function() {
   actionFunction();
 
   // Do another action a delay.
-  setTimeout(this.doAction.bind(this), _.random(5000, 10000));
+  setTimeout(this.doAction.bind(this),
+    _.random(
+      this.actionTimeoutMin,
+      this.actionTimeoutMax));
 };
 
 Player.prototype.saySomething = function() {
@@ -117,6 +135,49 @@ Player.prototype.createMatch = function() {
 
   console.log("[%s] createMatch", this.username);
   this.state = 'WAITING';
+};
+
+Player.prototype.joinGame = function() {
+  this.socket.emit('joinGame', {
+    roomName: this.roomName,
+    gameID: 'tictactoe'
+  });
+
+  console.log("[%s] joinGame", this.username);
+  this.state = 'WAITING';
+};
+
+Player.prototype.disconnect = function() {
+  this.socket.disconnect();
+
+  console.log("[%s] disconnect", this.username);
+  this.state = 'FINISHED';
+  this.manager.playerFinished();
+};
+
+Player.prototype.launchMatch = function(eventData) {
+  console.log("[%s] launchMatch", this.username, eventData);
+  this.state = 'PLAYING';
+  this.matchUrl = eventData.url;
+
+  // Disconnect from the lobby.
+  this.socket.disconnect();
+
+  // Connect to the match.
+  var matchAddress = util.format('%s/%s',
+    this.serverAddress,
+    eventData.url);
+
+  this.socket = io.connect(matchAddress, {
+    'reconnection delay': 0,
+    'reopen delay': 0,
+    'force new connection': true,
+    'headers': {'Cookie': util.format('connect.sid=%s', this.sessionCookie)}
+  });
+
+  this.socket.once('connect', function() {
+    console.log("[%s] Socket connected to match [%s]", eventData.url);
+  }.bind(this));
 };
 
 module.exports = Player;

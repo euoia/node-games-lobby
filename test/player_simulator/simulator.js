@@ -1,24 +1,48 @@
 var Player = require('./Player.js');
 
-var maxPlayers = 50;
-var addPlayerDelay = 5000;
-var serverAddress = 'http://localhost:3000';
-var numPlayers = 0;
+function Simulator () {
+  this.maxPlayers = 50;
+  this.addPlayerDelay = 5000;
+  this.serverAddress = 'http://localhost:3000';
+  this.numPlayers = 0;
+  this.activePlayers = 0;
 
-function addPlayer() {
-  console.log("Adding player %d", numPlayers);
-  if (numPlayers >= maxPlayers) {
+  this.addPlayer();
+}
+
+Simulator.prototype.addPlayer = function() {
+  if (this.numPlayers >= this.maxPlayers) {
+    console.log("[Simulator] Reached max player limit of %d", this.maxPlayers);
     return;
   }
 
+  console.log("[Simulator] addPlayer", this.numPlayers);
+  this.logStatus();
+
   new Player({
-    serverAddress: serverAddress,
-    username: 'simulated' + String(numPlayers)
+    serverAddress: this.serverAddress,
+    username: 'simulated' + String(this.numPlayers),
+    manager: this
   });
 
-  numPlayers += 1;
+  this.numPlayers += 1;
+  this.activePlayers += 1;
 
-  setTimeout(addPlayer.bind(this), addPlayerDelay);
-}
+  setTimeout(this.addPlayer.bind(this), this.addPlayerDelay);
+};
 
-addPlayer();
+// Called from the player when it disconnects.
+Simulator.prototype.playerFinished = function() {
+  console.log("[Simulator] playerFinished");
+  this.activePlayers -= 1;
+  this.logStatus();
+};
+
+Simulator.prototype.logStatus = function() {
+  console.log("[Simulator] %d total players created, %d active",
+    this.numPlayers,
+    this.activePlayers);
+};
+
+new Simulator();
+
