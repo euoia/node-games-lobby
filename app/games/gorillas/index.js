@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Sun 09 Feb 2014 08:51:01 PM EST
+// Last Modified:      Tue 11 Mar 2014 11:58:40 AM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -45,7 +45,6 @@ function Gorillas (resultService, usernames) {
   // The index of each gorilla's building.
   this.gorillaBuildings = null;
 
-  // The player has thrown their banana.
   // TODO: This could be cleaner.
   this.socketEventHandlers = {
     'disconnect': this.disconnect,
@@ -69,23 +68,7 @@ Gorillas.prototype.getPlayerByUsername = function(username) {
 };
 
 // --------------------------------------------------
-// Express routes.
-
-// Express request route that loads the game page.
-Gorillas.prototype.play = function (req, res) {
-  // TODO: This should probably be handled at a different layer.
-  if (req.session.username === undefined) {
-    return res.send(403, 'You must login before you can view games.');
-  }
-
-  // Render the game page.
-  console.log('gorillas: %s loaded the launch page.', req.session.username);
-  return res.render('games/gorillas/index.html', { title: 'Gorillas' });
-};
-
-
-// --------------------------------------------------
-// Methods required by the game server API.
+// Methods required by the GamesLobby API.
 
 // Game.getConfig(configName)
 // Return a game configuration item.
@@ -103,12 +86,22 @@ Gorillas.getConfig = function(configName) {
 // After the player loads the <launchVerb> page, the client-side
 // JavaScript makes a socket.io connection to the game lobby with a socket.io
 // namespace of this matchID.
+//
+// TODO: A lot of this function is boilerplate and could be refactored.
 Gorillas.prototype.connection = function(err, socket, session) {
-  console.log('Gorillas: Connection from %s.', session.username);
+  if (session === undefined) {
+    console.log("[Gorillas] <= connection [%s] Error: %s",
+      socket.handshake.address.address,
+      'session was undefined');
+    return;
+  }
 
   if (err) {
-    // TODO: What kind of errors could occur here?
-    throw err;
+    console.log('[Gorillas] <= connection [%s] [%s] Error: %s',
+      session.username,
+      socket.handshake.address.address,
+      err.message);
+    return;
   }
 
   // Add the player. The socket will connect once the page has loaded.
@@ -129,11 +122,38 @@ Gorillas.prototype.connection = function(err, socket, session) {
     if (this.socketEventHandlers.hasOwnProperty(event)) {
       var eventHandler = this.socketEventHandlers[event];
       socket.on(event, eventHandler.bind(this, socket, session));
-      console.log('gorillas game: Bound event to socket for %s.', session.username, event);
+      console.log('[Gorillas] <= connection [%s]: bind [%s]',
+        session.username,
+        event);
     }
   }
 };
 
+// Return the URL routes required by this game.
+Gorillas.prototype.getRoutes = function() {
+  return {'play': this.play};
+};
+
+// --------------------------------------------------
+// Express routes.
+
+// Express request route that loads the game page.
+// TODO: Possibly rename to index.
+Gorillas.prototype.play = function (req, res) {
+  // TODO: This should probably be handled at a different layer.
+  if (req.session.username === undefined) {
+    return res.send(403, 'You must login before you can view games.');
+  }
+
+  // Render the game page.
+  console.log('[Gorillas] play [%s]: rendering view', req.session.username);
+  return res.render('games/gorillas/index.html', { title: 'Gorillas' });
+};
+
+// --------------------------------------------------
+// Socket event handlers.
+
+// Player has disconnected from the game.
 Gorillas.prototype.disconnect = function(socket, session) {
   if (this.gameState === 'FINISHED') {
     return;
@@ -148,31 +168,13 @@ Gorillas.prototype.disconnect = function(socket, session) {
   this.resultService.setWinner(winnerUsername);
   this.resultService.publishResult();
 
-  console.log("Gorillas: %s disconnected, %s is the winner.",
+  console.log("[Gorillas] <= disconnect [%s]: Assigning win [%s]",
     session.username,
     winnerUsername);
 
   this.endOfMatch();
 };
 
-// Return the URL routes required by this game.
-Gorillas.prototype.getRoutes = function() {
-  return {'play': this.play};
-};
-
-// --------------------------------------------------
-// Socket helper methods.
-
-// Emit an event to all players.
-Gorillas.prototype.emitAll = function (event, data) {
-  for (var i = 0; i < this.players.length; i += 1) {
-    var player = this.players[i];
-    player.socket.emit(event, data);
-  }
-};
-
-// --------------------------------------------------
-// Socket event handlers.
 
 // Player is ready to start the game.
 Gorillas.prototype.ready = function (socket, session, eventData) {
@@ -191,7 +193,8 @@ Gorillas.prototype.ready = function (socket, session, eventData) {
   }
 
   if (playersReady === 2) {
-    console.log("Both players are now ready.");
+    console.log("[Tictactoe] <= connection [%s]: Both players are now ready",
+      session.username);
     this.start();
   }
 };
@@ -242,12 +245,22 @@ Gorillas.prototype.endRound = function (socket, session) {
 };
 
 // --------------------------------------------------
+// Socket helper methods.
+
+// Emit an event to all players.
+Gorillas.prototype.emitAll = function (event, data) {
+  for (var i = 0; i < this.players.length; i += 1) {
+    var player = this.players[i];
+    player.socket.emit(event, data);
+  }
+};
+
+// --------------------------------------------------
 // Game play methods.
 
 // Start the game.
 Gorillas.prototype.start = function () {
-  console.log('Gorillas start');
-
+  console.log('[Gorillas] start');
 
   // Send each player the game details in the start event.
   for (var i = 0; i < this.players.length; i += 1) {
