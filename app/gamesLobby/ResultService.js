@@ -4,23 +4,21 @@
 function ResultService(matchID, resultListener) {
   this.matchID = matchID;
   this.resultListener = resultListener;
-  this.winner = null;
-  this.loser = null;
 }
 
-ResultService.prototype.setWinner = function(winner) {
-  this.winner = winner;
-};
+// Publish a result to be stored.
+// Specify: winners, winner, losers, loser, drawers, drawer.
+ResultService.prototype.publishResult = function(result) {
+  var winners = result.winners || [result.winner];
+  var losers = result.losers || [result.loser];
+  var drawers = result.drawers || [result.drawer];
 
-ResultService.prototype.setLoser = function(loser) {
-  this.loser = loser;
-};
-
-ResultService.prototype.publishResult = function() {
   this.resultListener.emit('result', {
     matchID: this.matchID,
-    winner: this.winner,
-    loser: this.loser});
+    winners: winners,
+    losers:  losers,
+    drawers: drawers
+  });
 };
 
 module.exports = ResultService;

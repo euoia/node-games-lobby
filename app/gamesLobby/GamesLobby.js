@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Sun 09 Mar 2014 09:52:48 AM EDT
+// Last Modified:      Tue 11 Mar 2014 02:32:59 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -138,6 +138,9 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
 
   // The result store.
   // Stores results of matches.
+  // TODO: There should be a ResultStore for each game. To simplify the use
+  // case where a single game is used, the whole system should support the
+  // notion of a default game.
   this.resultStore = new ResultStore();
 
   // The result listener.
@@ -145,9 +148,15 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   // 'result' event.
   this.resultListener = new EventEmitter();
   this.resultListener.on('result', function (eventData) {
-    console.log('[GamesLobby] <= result [%s] [%s]', eventData.winner, eventData.loser);
-    this.resultStore.addWin(eventData.winner);
-    this.resultStore.addLoss(eventData.loser);
+    console.log('[GamesLobby] <= result [winners=%s] [losers=%s] [drawers=%s]',
+      eventData.winners,
+      eventData.losers,
+      eventData.drawers);
+
+    this.resultStore.addWinners(eventData.winners);
+    this.resultStore.addLosers(eventData.losers);
+    this.resultStore.addDrawers(eventData.drawers);
+
     this.matchManager.deleteMatch(eventData.matchID);
   }.bind(this));
 
@@ -273,7 +282,6 @@ GamesLobby.prototype.listGames = function(socket, session, eventData) {
 // TODO: data is not a well named variable.
 GamesLobby.prototype.createMatch = function(socket, session, eventData) {
   console.log("[GamesLobby] <= createMatch [%s] [%s]", session.username, eventData.gameID);
-  console.dir(eventData);
 
   // Check the game name is one of the available games.
   if (_.has(this.games, eventData.gameID) === false) {
@@ -313,7 +321,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
       pluralize('player', playersNeeded)));
 
   this.sendRoomWaitingMatches(eventData.roomName);
-  console.log("[GamesLobby] createMatch success");
+  console.log("[GamesLobby] createMatch [%s] [%s]: success", session.username, eventData.gameID);
 };
 
 
