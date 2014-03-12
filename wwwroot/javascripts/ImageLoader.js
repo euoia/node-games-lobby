@@ -20,10 +20,6 @@ define([], function() {
 
     image.onload = function() {
       this.numLoaded += 1;
-      console.log("Image %s loaded", imageSrc);
-      console.log("numLoaded=%d length=%d", this.numLoaded, this.images.length);
-      console.log("images ", this.images);
-
       if (this.numLoaded === this.images.length) {
         complete();
       }
