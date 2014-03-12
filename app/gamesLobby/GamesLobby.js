@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Tue 11 Mar 2014 08:32:55 PM EDT
+// Last Modified:      Wed 12 Mar 2014 10:56:10 AM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -462,7 +462,10 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
   this.commandCenter.sendRoomNotification(
     socket,
     eventData.roomName,
-    util.format("%s joined %s's %s game.", session.username, match.gameID)
+    util.format("%s joined %s's %s game.",
+      session.username,
+      match.owner,
+      match.gameID)
   );
 };
 
@@ -523,7 +526,10 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   this.commandCenter.sendRoomNotification(
     socket,
     eventData.roomName,
-    util.format("%s joined %s's %s game.", session.username, match.gameID)
+    util.format("%s joined %s's %s game.",
+      session.username,
+      match.owner,
+      match.gameID)
   );
 };
 
