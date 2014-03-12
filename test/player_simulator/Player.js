@@ -7,6 +7,7 @@ function Player(options) {
   this.serverAddress = options.serverAddress;
   this.username = options.username;
   this.manager = options.manager;
+  this.archetype = options.archetype;
 
   // One of: CONNECTING, IN_LOBBY, WAITING, IN_GAME, FINISHED
   this.state = 'CONNECTING';
@@ -31,15 +32,21 @@ function Player(options) {
     ],
     'IN_LOBBY': [
       this.saySomething.bind(this),
-      this.createMatch.bind(this),
-      this.joinGame.bind(this),
-      this.disconnect.bind(this),
-      this.finish.bind(this)
+      this.disconnect.bind(this)
+      //this.finish.bind(this)
     ],
     'WAITING': [
       this.saySomething.bind(this)
     ]
   };
+
+  if (this.archetype === 'JOINER') {
+    this.actionFunctions.IN_LOBBY.push(this.joinGame.bind(this));
+  }
+
+  if (this.archetype === 'CREATOR') {
+    this.actionFunctions.IN_LOBBY.push(this.createMatch.bind(this));
+  }
 
   this.roomName = 'gorilla chat';
   this.login(function (err) {
@@ -123,6 +130,12 @@ Player.prototype.doAction = function() {
     return;
   }
 
+  // Do another action after delay.
+  setTimeout(this.doAction.bind(this),
+    _.random(
+      this.actionTimeoutMin,
+      this.actionTimeoutMax));
+
   var possibleActions = this.actionFunctions[this.state];
   if (possibleActions === undefined) {
     console.log("[%s] No possible actions in state=%s", this.username, this.state);
@@ -132,11 +145,6 @@ Player.prototype.doAction = function() {
   var actionFunction = _.sample(possibleActions);
   actionFunction();
 
-  // Do another action a delay.
-  setTimeout(this.doAction.bind(this),
-    _.random(
-      this.actionTimeoutMin,
-      this.actionTimeoutMax));
 };
 
 Player.prototype.saySomething = function() {
@@ -165,8 +173,18 @@ Player.prototype.joinGame = function() {
     gameID: 'tictactoe'
   });
 
+  // Change state so we don't disconnect before the game starts!
+  this.state = 'JOINING';
+
+  this.lobbySocket.once('notification', function(eventData) {
+    // Join failed - probably no games.
+    // TODO: Redesign messages to make this not require string checking.
+    if (eventData.message.match('^You joined') === null) {
+      this.state = 'IN_LOBBY';
+    }
+  }.bind(this));
+
   console.log("[%s] joinGame", this.username);
-  //this.state = 'WAITING';
 };
 
 Player.prototype.disconnect = function() {
