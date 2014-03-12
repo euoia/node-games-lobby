@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Tue 11 Mar 2014 02:32:59 PM EDT
+// Last Modified:      Tue 11 Mar 2014 08:32:55 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -248,7 +248,8 @@ GamesLobby.prototype.launchMatch = function(match) {
     url: util.format('%s/%s/%s',
       match.gameID,
       match.id,
-      this.games[match.gameID].getConfig('launchVerb'))
+      this.games[match.gameID].getConfig('launchVerb')),
+    matchID: match.id
   };
 
   for (var i = 0; i < match.playerUsernames.length; i += 1) {
@@ -321,7 +322,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
       pluralize('player', playersNeeded)));
 
   this.sendRoomWaitingMatches(eventData.roomName);
-  console.log("[GamesLobby] createMatch [%s] [%s]: success", session.username, eventData.gameID);
+  console.log("[GamesLobby] createMatch [%s] [%s] success", session.username, eventData.gameID);
 };
 
 
@@ -381,6 +382,7 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
       match.owner,
       match.gameID));
 
+
   // Send the countdown to each player.
   // TODO: Should this be done on the client side?
   if (match.state === 'PLAYING') {
@@ -418,9 +420,6 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
             secondsRemaining,
             secondsRemainingStr));
 
-        console.log("[GamesLobby] Countdown %d [%s]", secondsRemaining, username);
-        console.log("[GamesLobby] Countdown %d [%s]", secondsRemaining, match.owner);
-
         secondsRemaining -= 1;
         setTimeout(sendCountdown, 1000);
       }
@@ -446,9 +445,9 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
     return;
   }
 
-  var matchToJoin = this.matchManager.getFirstWaitingMatch(eventData.gameID);
+  var match = this.matchManager.getFirstWaitingMatch(eventData.gameID);
 
-  if (matchToJoin === undefined) {
+  if (match === undefined) {
     this.commandCenter.sendNotification(
       socket,
       util.format('Sorry, there there are no %s matches to join. ' +
@@ -457,8 +456,14 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
     return;
   }
 
-  this.addPlayerToMatch(session.username, matchToJoin);
+  this.addPlayerToMatch(session.username, match);
   this.sendRoomWaitingMatches(eventData.roomName);
+
+  this.commandCenter.sendRoomNotification(
+    socket,
+    eventData.roomName,
+    util.format("%s joined %s's %s game.", session.username, match.gameID)
+  );
 };
 
 
@@ -515,6 +520,11 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
 
   this.addPlayerToMatch(session.username, match);
   this.sendRoomWaitingMatches(eventData.roomName);
+  this.commandCenter.sendRoomNotification(
+    socket,
+    eventData.roomName,
+    util.format("%s joined %s's %s game.", session.username, match.gameID)
+  );
 };
 
 GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
