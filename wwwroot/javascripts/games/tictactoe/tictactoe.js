@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:25:48 AM GMT
-// Last Modified:      Thu 31 Oct 2013 01:29:25 PM GMT
+// Last Modified:      Tue 11 Mar 2014 04:01:20 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -38,7 +38,6 @@ define(['jquery', 'underscore', 'socket.io'], function($, _, io) {
     this.socket.on('start', this.start.bind(this));
     this.socket.on('nextRound', this.nextRound.bind(this));
     this.socket.on('select', this.select.bind(this));
-    this.socket.on('victory', this.victory.bind(this));
     this.socket.on('end', this.end.bind(this));
     this.socket.on('error', this.error.bind(this));
 
@@ -108,16 +107,20 @@ define(['jquery', 'underscore', 'socket.io'], function($, _, io) {
     }
   };
 
-  // Event handler: The game has been won.
-  Tictactoe.prototype.victory = function(data) {
-    var playerHas;
-    if (data.player === this.username) {
-      playerHas = 'You have';
+  // Event handler: The match is over.
+  Tictactoe.prototype.end = function(eventData) {
+    if (eventData.outcome === 'win') {
+      if (eventData.winner === this.username) {
+        playerHas = 'You have';
+      } else {
+        playerHas = eventData.winner + ' has';
+      }
+
+      $('#messageArea').html(playerHas + ' won the game!');
     } else {
-      playerHas = data.player + ' has';
+      $('#messageArea').html('The game ended in stalemate.');
     }
 
-    $('#messageArea').html(playerHas + ' won the game!');
     $('#backToChat').show();
   };
 
