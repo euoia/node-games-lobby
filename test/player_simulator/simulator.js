@@ -3,6 +3,7 @@ var Player = require('./Player.js');
 function Simulator () {
   this.maxPlayers = 50;
   this.addPlayerDelay = 5000;
+  this.statusInterval = 10000;
   this.serverAddress = 'http://localhost:3000';
   this.numPlayers = 0;
   this.activePlayers = 0;
@@ -13,6 +14,7 @@ function Simulator () {
 Simulator.prototype.addPlayer = function() {
   if (this.numPlayers >= this.maxPlayers) {
     console.log("[Simulator] Reached max player limit of %d", this.maxPlayers);
+    setInterval(this.logStatus.bind(this), this.statusInterval);
     return;
   }
 

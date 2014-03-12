@@ -11,18 +11,30 @@ function Player(options) {
   // One of: CONNECTING, IN_LOBBY, WAITING, IN_GAME, FINISHED
   this.state = 'CONNECTING';
 
-  this.actionTimeoutMin = 10000;
-  this.actionTimeoutMax = 20000;
+  this.actionTimeoutMin = 1000;
+  this.actionTimeoutMax = 2000;
 
   // Having joined a match, record the URL.
   this.matchUrl = null;
 
+  // Sockets. We need separate ones because socket.io glitches out if you
+  // connect rather than reconnect.
+  this.lobbySocket = null;
+  this.matchSocket = null;
+
   this.actionFunctions = {
+    'NOT_CONNECTED': [
+      this.connectLobby.bind(this)
+    ],
+    'IN_GAME': [
+      this.playRandomMove.bind(this)
+    ],
     'IN_LOBBY': [
       this.saySomething.bind(this),
       this.createMatch.bind(this),
       this.joinGame.bind(this),
-      this.disconnect.bind(this)
+      this.disconnect.bind(this),
+      this.finish.bind(this)
     ],
     'WAITING': [
       this.saySomething.bind(this)
@@ -36,18 +48,15 @@ function Player(options) {
       return;
     }
 
-    this.connectSocket(function(err) {
+    this.connectLobby(function(err) {
       if (err) {
-        throw new Error(err);
+        console.log("[%s] Error occurred trying to connect to lobby: %s:",
+          this.username,
+          err);
+        return;
       }
 
-      this.subscribe(function(err) {
-        if (err) {
-          throw new Error(err);
-        }
-
-        this.doAction();
-      }.bind(this));
+      this.doAction();
     }.bind(this));
   }.bind(this));
 }
@@ -69,26 +78,39 @@ Player.prototype.login = function(cb) {
   }.bind(this));
 };
 
-Player.prototype.connectSocket = function(cb) {
+Player.prototype.connectLobby = function(cb) {
   console.log("[%s] Connecting the socket using cookie %s", this.username, this.sessionCookie);
-  this.socket = io.connect(this.serverAddress, {
+
+  this.lobbySocket = io.connect(this.serverAddress, {
     'reconnection delay': 0,
     'reopen delay': 0,
     'force new connection': true,
     'headers': {'Cookie': util.format('connect.sid=%s', this.sessionCookie)}
   });
 
-  this.socket.once('connect', function() {
+  this.lobbySocket.once('connect', function() {
     console.log("[%s] Socket connected to lobby", this.username);
-    cb();
+
+    // Subscribe to the default room.
+    this.subscribe(function(err) {
+      if (err) {
+        throw new Error(err);
+      }
+
+      this.state = 'IN_LOBBY';
+
+      if (cb) {
+        cb();
+      }
+    }.bind(this));
   }.bind(this));
 
-  this.socket.on('launchMatch', this.launchMatch.bind(this));
+  this.lobbySocket.once('launchMatch', this.launchMatch.bind(this));
 };
 
 Player.prototype.subscribe = function(cb) {
-  this.socket.emit('subscribe', {roomName: this.roomName});
-  this.socket.once('notification', function(eventData) {
+  this.lobbySocket.emit('subscribe', {roomName: this.roomName});
+  this.lobbySocket.once('notification', function(eventData) {
     console.log("[%s] Subscribed: %s", this.username, eventData.message);
     this.state = 'IN_LOBBY';
     cb();
@@ -121,14 +143,14 @@ Player.prototype.saySomething = function() {
   var message = 'hello everybody';
   console.log("[%s] Saying: %s", this.username, message);
 
-  this.socket.emit('message', {
+  this.lobbySocket.emit('message', {
     roomName: this.roomName,
     message: message
   });
 };
 
 Player.prototype.createMatch = function() {
-  this.socket.emit('createMatch', {
+  this.lobbySocket.emit('createMatch', {
     roomName: this.roomName,
     gameID: 'tictactoe'
   });
@@ -138,46 +160,94 @@ Player.prototype.createMatch = function() {
 };
 
 Player.prototype.joinGame = function() {
-  this.socket.emit('joinGame', {
+  this.lobbySocket.emit('joinGame', {
     roomName: this.roomName,
     gameID: 'tictactoe'
   });
 
   console.log("[%s] joinGame", this.username);
-  this.state = 'WAITING';
+  //this.state = 'WAITING';
 };
 
 Player.prototype.disconnect = function() {
-  this.socket.disconnect();
-
   console.log("[%s] disconnect", this.username);
+
+  this.lobbySocket.disconnect();
+  this.state = 'NOT_CONNECTED';
+};
+
+Player.prototype.finish = function() {
+  console.log("[%s] disconnect", this.username);
+  this.lobbySocket.disconnect();
   this.state = 'FINISHED';
   this.manager.playerFinished();
 };
 
 Player.prototype.launchMatch = function(eventData) {
   console.log("[%s] launchMatch", this.username, eventData);
-  this.state = 'PLAYING';
+  this.state = 'JOINING';
   this.matchUrl = eventData.url;
 
   // Disconnect from the lobby.
-  this.socket.disconnect();
+  this.lobbySocket.disconnect();
 
   // Connect to the match.
   var matchAddress = util.format('%s/%s',
     this.serverAddress,
-    eventData.url);
+    eventData.matchID);
 
-  this.socket = io.connect(matchAddress, {
+  console.log("[%s] launchMatch [matchAddress=%s]", this.username, matchAddress);
+
+  this.matchSocket = io.connect(matchAddress, {
     'reconnection delay': 0,
     'reopen delay': 0,
     'force new connection': true,
     'headers': {'Cookie': util.format('connect.sid=%s', this.sessionCookie)}
   });
 
-  this.socket.once('connect', function() {
-    console.log("[%s] Socket connected to match [%s]", eventData.url);
+  this.matchSocket.once('connect', function() {
+    console.log("[%s] Socket connected to match [%s]", this.username, eventData.url);
+    this.matchSocket.once('start', function() {
+      console.log('[%s] Match started', this.username);
+      this.state = 'IN_GAME';
+    }.bind(this));
+
+    this.matchSocket.once('end', function(eventData) {
+      this.matchSocket.socket.disconnect();
+      this.state = 'NOT_CONNECTED';
+
+      console.log('[%s] connectLobby this.matchSocket.socket.connected=%s',
+                  this.username,
+                  this.matchSocket.socket.connected);
+
+      console.log('[%s] <= result [winner=%s]', this.username, eventData.winner);
+      console.log('[%s] Disconnected socket.', this.username);
+    }.bind(this));
   }.bind(this));
+};
+
+// tictactoe-specific behaviour.
+// TODO: Move to its own class.
+Player.prototype.playRandomMove = function() {
+  if (this.moveIdx === undefined) {
+    this.moveIdx = _.random(0, 9);
+  }
+
+  var moves = [
+    'topLeft',
+    'topMiddle',
+    'topRight',
+    'centerLeft',
+    'centerMiddle',
+    'centerRight',
+    'bottomLeft',
+    'bottomMiddle',
+    'bottomRight'];
+
+
+  this.matchSocket.emit('select', {
+    id: moves[this.moveIdx++ % 9]
+  });
 };
 
 module.exports = Player;
