@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 02:44:20 PM EDT
+// Last Modified:      Tue 11 Mar 2014 06:18:56 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -163,6 +163,10 @@ Tictactoe.prototype.play = function (req, res) {
 
 // Player has disconnected from the game.
 Tictactoe.prototype.disconnect = function(socket, session) {
+  if (session.username) {
+    console.log("[Tictactoe] <= disconnect [%s]", session.username);
+  }
+
   if (this.gameState === 'FINISHED') {
     return;
   }
@@ -172,7 +176,10 @@ Tictactoe.prototype.disconnect = function(socket, session) {
   var winnerUsername = this.usernames[winnerIdx];
 
   // Disconnection results in forfeiting the game.
-  this.endMatch(winnerUsername, session.username);
+  this.resultService.publishResult({
+    winner: winnerUsername,
+    loser: session.username
+  });
 
   console.log("[Tictactoe] <= disconnect [%s]: Assigning win [%s]",
     session.username,
@@ -188,7 +195,9 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
   }
 
   if (this.board[eventData.id] !== null) {
-    console.log('%s tried to cheat by making an invalid move!', session.username);
+    console.log('[Tictactoe] <= select [%s] fail: Invalid move [%s]',
+      session.username,
+      eventData.id);
     return socket.emit('error', {msg: 'Not a valid move.'});
   }
 
@@ -205,10 +214,9 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
       loser: this.otherPlayer()
     });
 
-    this.emitAll('victory', {
-      player: session.username,
-      type: winResult.type,
-      val: winResult.val});
+    this.emitAll('end', {
+      winner: session.username
+    });
 
     this.gameState = 'FINISHED';
     return;
@@ -217,13 +225,11 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
   if (this.isStalemate() === true) {
     console.log("[Tictactoe] <= select [%s]: stalemate", session.username);
 
-    this.resultService.publishDrawResult({
+    this.resultService.publishResult({
       drawers: this.usernames
     });
 
-    this.emitAll('end', {
-      msg: 'The game ended in stalemate.'
-    });
+    this.emitAll('end', {});
 
     this.gameState = 'FINISHED';
     return;
@@ -260,9 +266,6 @@ Tictactoe.prototype.start = function () {
 
   this.emitAll('start');
   this.nextTurn();
-
-  // Tell the players who's turn it is next.
-  console.log("It is %s's turn.", this.currentPlayer());
 
   this.emitAll('nextRound', {
     nextPlayer: this.currentPlayer()
@@ -353,9 +356,6 @@ Tictactoe.prototype.isStalemate = function() {
   if (isStalemate) {
     return true;
   }
-};
-
-Tictactoe.prototype.endMatch = function(winner, loser) {
 };
 
 module.exports = Tictactoe;
