@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Fri 07 Mar 2014 01:45:11 PM EST EST EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Wed 12 Mar 2014 03:01:40 PM EDT EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -102,8 +102,8 @@ app.configure(function() {
   // https://github.com/emberfeather/less.js-middleware
   app.use(lessMiddleware({
     prefix: '/stylesheets',
-    src: __dirname + '../wwwroot/less',
-    dest: __dirname + '../wwwroot/stylesheets',
+    src: __dirname + '/../wwwroot/less',
+    dest: __dirname + '/../wwwroot/stylesheets',
     force: true,
     debug: true,
     compress: true
