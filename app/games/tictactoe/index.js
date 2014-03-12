@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 06:18:56 PM EDT
+// Last Modified:      Wed 12 Mar 2014 11:52:36 AM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -191,6 +191,7 @@ Tictactoe.prototype.select = function (socket, session, eventData) {
   console.log('[Tictactoe] <= select [%s] [%s]', session.username, eventData.id);
 
   if (session.username !== this.currentPlayer()) {
+    console.log('[Tictactoe] <= select [%s] fail: Not your move', session.username);
     return socket.emit('error', {msg: 'It is not your turn.'});
   }
 
