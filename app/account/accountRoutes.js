@@ -19,12 +19,15 @@ var auth = exports.auth = function(req, res) {
     return res.render('./account/auth.ejs', {title: 'hidden auth page'});
   }
 
+  // Auth page title.
+  var title = 'hidden auth page';
+
   // Authenticate.
   if (req.body.username === undefined ||
       req.body.password === undefined
   ) {
     return res.render('./account/auth.ejs', {
-      title: 'hidden auth page',
+      title: title,
       error: 'enter a username and password'
     });
   }
@@ -39,10 +42,9 @@ var auth = exports.auth = function(req, res) {
     }
 
     // Account with this username exists.
-    // TODO: Handle auth.
     if (existingAccount === null) {
       return res.render('./account/auth.ejs', {
-        title: 'hidden auth page',
+        title: title,
         error: 'account not found'
       });
     }
@@ -50,7 +52,7 @@ var auth = exports.auth = function(req, res) {
     if (account.checkPassword(password, existingAccount.password) === false) {
       console.log('[accountRoutes] auth [%s] failed auth', username);
       return res.render('./account/auth.ejs', {
-        title: 'hidden auth page',
+        title: title,
         error: 'incorrect password'
       });
     }
@@ -67,6 +69,9 @@ var auth = exports.auth = function(req, res) {
 };
 
 // AJAX login request.
+//
+// Note: This doesn't really authenticate the player so much as create a new
+//       user.
 var login = exports.login = function(req, res) {
   var username = req.body.username;
 
