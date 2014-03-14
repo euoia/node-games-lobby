@@ -1,5 +1,6 @@
 // TODO: The number of instances of emitting a simply message indicates that we
 // could possibly do with a commandCenter.addSimpleCommand function.
+// TODO: Rename GamesLobby
 //
 define([], function() {
   // Pass in a instance of the command center.
@@ -19,6 +20,7 @@ define([], function() {
     commandCenter.addCommand('createMatch', this.createMatch.bind(this));
     commandCenter.addCommand('joinMatch', this.joinMatch.bind(this));
     commandCenter.addCommand('record', this.playerRecord.bind(this));
+    commandCenter.addCommand('save', this.save.bind(this));
 
     // Listener events.
     commandCenter.addListener('launchMatch', this.launchGame.bind(this));
@@ -70,6 +72,17 @@ define([], function() {
 
     this.commandCenter.emit('record', {
       username: username
+    });
+  };
+
+  GameLobby.prototype.save = function(password) {
+    if (password === undefined) {
+      this.commandCenter.addNotification(Date.now(), 'Must specify a password.');
+      return;
+    }
+
+    this.commandCenter.emit('save', {
+      password: password
     });
   };
 

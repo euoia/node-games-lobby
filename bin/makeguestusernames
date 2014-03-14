@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+// vim: ft=javascript
+
+var _ = require('underscore'),
+  redis = require('redis'),
+  util = require('util');
+
+var minGuestId = 1000;
+var maxGuestId = 9999;
+
+var redisClient = redis.createClient();
+
+console.log('Generating IDs from %d to %d...', minGuestId, maxGuestId);
+var guestIds = _.range(minGuestId, maxGuestId);
+
+console.log('Generating usernames...');
+var guestUsernames = _.map(guestIds, function(guestId) {
+  return util.format('Guest%d', guestId);
+});
+
+console.log('Shuffling usernames...');
+guestUsernames = _.shuffle(guestUsernames);
+
+console.log('Storing usernames...');
+
+// This is convoluted because node-redis 0.1.7 does not accept an array for
+// rpush. This will error if the number of usernames exceeds the engine limit:
+// http://stackoverflow.com/questions/19745224/how-to-save-javascript-array-as-redis-list
+redisClient.rpush.apply(redisClient,
+  ['guestUsernames']
+  .concat(guestUsernames)
+  .concat(function(err, result) {
+    if (err) {
+      throw (err);
+    }
+
+    console.log('Done');
+    process.exit(0);
+  })
+);

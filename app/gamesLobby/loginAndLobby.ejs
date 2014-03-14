@@ -59,7 +59,7 @@
 						<form id="login">
 							<div id="enterUsernameBox">
 								<div class="usernameInputText"></div>
-								<input type="text" id="usernameInput" value="<%= suggestedUsername %>" /><br />
+								<input type="text" id="usernameInput" value="<%= typeof(suggestedUsername) !== 'undefined' ? suggestedUsername : '' %>" /><br />
 								<input type="hidden" id="roomName" value="gorilla chat" />
 								<input type="submit" class="btn btn-warning" value="Go-rilla!" />
 							</div>

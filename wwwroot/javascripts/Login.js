@@ -87,7 +87,7 @@ define (['jquery', 'underscore', 'command-center-client'], function($, _, Comman
     },
 
     function(data) {
-      if (data.result !== 'ok') {
+      if (data.result === 'fail') {
         return $this.loginFailure(data.message);
       }
 

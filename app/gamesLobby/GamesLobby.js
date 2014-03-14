@@ -1,5 +1,5 @@
-// Created:            Wed 30 Oct 2013 01:44:14 AM GMT
-// Last Modified:      Wed 12 Mar 2014 10:56:10 AM EDT
+// Created:            Wed 30 Oct 2013 01:44:14 AM GMTccou
+// Last Modified:      Thu 13 Mar 2014 02:39:56 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -59,7 +59,8 @@ var uuid = require ('uuid'),
   EventEmitter = require('events').EventEmitter,
   pluralize = require('pluralize'),
   ResultStore = require('./ResultStore.js'),
-  MatchManager = require('./MatchManager.js');
+  MatchManager = require('./MatchManager.js'),
+  account = require('../account/account.js');
 
 // The GamesLobby object contains all the games available and all the matches
 // being played.
@@ -99,6 +100,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   this.commandCenter.addEventHandler('joinGame', this.joinGame.bind(this));
   this.commandCenter.addEventHandler('joinMatch', this.joinMatch.bind(this));
   this.commandCenter.addEventHandler('record', this.getPlayerRecord.bind(this));
+  this.commandCenter.addEventHandler('save', this.savePlayer.bind(this));
 
   //------------------------------------------------------
   //  The enabled games.
@@ -557,6 +559,21 @@ GamesLobby.prototype.getPlayerRecord = function(socket, session, eventData) {
     socket,
     playerRecord,
     eventData.roomName);
+};
+
+// TODO: Probably call this register instead.
+GamesLobby.prototype.savePlayer = function(socket, session, eventData) {
+  account.registerAccount(session.username, eventData.password, function(err) {
+    if (err) {
+      console.log('[GamesLobby] <= save [%s] error: %s', session.username, err);
+      return;
+    }
+
+    this.commandCenter.sendNotification(
+      socket,
+      'Save successful.',
+      eventData.roomName);
+  }.bind(this));
 };
 
 module.exports = GamesLobby;

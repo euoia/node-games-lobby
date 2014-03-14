@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Wed 12 Mar 2014 03:01:40 PM EDT EST EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Fri 14 Mar 2014 02:22:03 PM EDT EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -123,19 +123,6 @@ app.configure('development', function() {
   app.use(express.errorHandler());
 });
 
-// --------------------------------------------------
-// Assign routes.
-
-// Use the lobby login as the landing page.
-app.get('/', gamesLobbyRoutes.login);
-
-// Hook up any POST routes requested by session.js - put them under /session/routeName.
-for (var routePath in accountRoutes.postRoutes) {
-  if (accountRoutes.postRoutes.hasOwnProperty(routePath)) {
-    app.post('/session/' + routePath, accountRoutes.postRoutes[routePath]);
-  }
-}
-
 // Start the express server.
 var server = http.createServer(app).listen(app.get('port'), function() {
   console.log("node-socket-games listening on port " + app.get('port'));
@@ -166,3 +153,26 @@ var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 // The handle to the express application is required in order to bind game-specific routes.
 var GamesLobby = require('./gamesLobby/GamesLobby.js');
 var gamesLobby = new GamesLobby(games, app, sessionSocketIO);
+
+
+// --------------------------------------------------
+// Assign routes.
+
+// Use the lobby login as the landing page.
+app.get('/', gamesLobbyRoutes.login);
+
+// Hook up any POST routes requested by account.js - put them under /session/routeName.
+// TODO: Fix the names.
+for (var routePath in accountRoutes.postRoutes) {
+  if (accountRoutes.postRoutes.hasOwnProperty(routePath)) {
+    app.post('/session/' + routePath, accountRoutes.postRoutes[routePath]);
+  }
+}
+
+// Hook up any GET routes requested by account.js - put them under /session/routeName.
+// TODO: Fix the names.
+for (var routePath in accountRoutes.getRoutes) {
+  if (accountRoutes.getRoutes.hasOwnProperty(routePath)) {
+    app.get('/session/' + routePath, accountRoutes.getRoutes[routePath]);
+  }
+}

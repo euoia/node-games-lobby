@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+		<link rel='stylesheet' href='/stylesheets/style.css' />
+		<link rel="stylesheet" type="text/css" href="/less/bootstrap/bootstrap.css" />
+  </head>
+  <body>
+	<div id="layout">
+		<div id="header"></div>
+
+		<div id="main">
+			<div id="left-sidebar"></div>
+			<div id="right">
+				<div id="right-sidebar"></div>
+			</div>
+
+			<!-- ----- CONTENT ----- -->
+			<div id="content">
+				<div id="content-head">
+					<h1><%= title %></h1>
+					<!--<p>Welcome to <%= title %>.&nbsp;-->
+					<!-- <a id="logout" class="chatting" href="#">log out</a></p> -->
+				</div>
+
+				<div id="content-body">
+					<!-- Shown: Login -->
+					<div class="login">
+						<form id="login" action="/session/auth" method="post">
+							<div id="enterUsernameBox">
+								<div class="usernameInputText"></div>
+								<input type="text" id="username" name="username" value="" /><br />
+								<input type="password" id="password" name="password" value="" /><br />
+								<input type="hidden" id="roomName" name="roomName" value="gorilla chat" />
+								<input type="submit" class="btn btn-warning" value="Go-rilla!" />
+							</div>
+							<div id="enterUsernameErrorBox"><%= typeof(error) !== 'undefined' ? error : '' %></div>
+						</form>
+					</div>
+				</div>
+
+				<div id="content-foot">
+				</div>
+			</div> <!-- ~~~~~ CONTENT ~~~~~ -->
+
+		</div> <!-- main -->
+	</div> <!-- layout -->
+	<canvas id="bananaCanvas" width="1000" height="1000" ></canvas>
+
+	<!-- Google analytics added February 11 2014 -->
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-47962725-1', 'multiplayergorillas.com');
+		ga('send', 'pageview');
+	</script>
+  </body>
+</html>
