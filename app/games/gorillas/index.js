@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Tue 11 Mar 2014 11:58:40 AM EDT
+// Last Modified:      Sat 22 Mar 2014 03:56:23 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -164,9 +164,10 @@ Gorillas.prototype.disconnect = function(socket, session) {
   var winnerUsername = this.usernames[winnerIdx];
 
   // Disconnection results in forfeiting the game.
-  this.resultService.setLoser(session.username);
-  this.resultService.setWinner(winnerUsername);
-  this.resultService.publishResult();
+  this.resultService.publishResult({
+    winner: winnerUsername,
+    loser: session.username
+  });
 
   console.log("[Gorillas] <= disconnect [%s]: Assigning win [%s]",
     session.username,
