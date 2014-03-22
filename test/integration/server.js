@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 06:08:06 PM GMT
-//  Last Modified:      Fri 07 Mar 2014 01:59:02 PM EST
+//  Last Modified:      Sat 22 Mar 2014 04:15:44 PM EDT
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -27,15 +27,25 @@ var app = require('../../app/server.js'),
   superagent = require('superagent'),
   should = require('should'),
   io = require('socket.io-client'),
-  util = require('util');
+  util = require('util'),
+  redis = require('redis');
+
+var redisClient = redis.createClient();
+
+// Make sure the usernames are available.
 
 describe('node-games-lobby:', function() {
 
   describe('Login:', function() {
-    // Need to login to get a session.
-    var badAccount = {
-      username: 'xxxxbob'
-    };
+    before(function(done) {
+      redisClient.del('user:bob', function(err) {
+        if (err) throw err;
+        redisClient.del('user:james', function(err) {
+          if (err) throw err;
+          done();
+        });
+      });
+    });
 
     var goodAccount1 = {
       username: 'bob'
