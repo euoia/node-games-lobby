@@ -15,7 +15,7 @@
     "underscore": "1.6.0",
     "uuid": "1.4.1",
     "bcryptjs": "~0.7.12",
-    "node-redis": "0.1.7"
+    "redis": "~0.10.1"
   },
   "devDependencies": {
     "mocha": "1.17.1",
