@@ -29,13 +29,6 @@ Why would this be useful to you?
 * You are happy for those games to conform to a simple API for the sake of the
   aforementioned conveniences.
 
-To be completed
-----
-* An accounts module.
-* Database storage.
-* More game examples.
-* Wiki documentation, which explains which bits to modify.
-
 In the future maybe
 ----
 * Better naming conventions for the ecosystem, node-games-lobby and

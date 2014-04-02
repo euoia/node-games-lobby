@@ -1,8 +1,14 @@
-Many TODOs are inlined in the code. This document collects more general project objectives.
+Many additional TODOs are present in the source.
 
-TODOs
+Immediate TODOs
 ----
-* Fix up the tests.
-* Move documentation of the API to its own wiki.
-* Create a REST API.
+* Store record on the account model.
+* Store per-game records.
+* Timeouts on game creation, moves.
+* Decouple multiplayergorillas.com from the lobby code.
 
+Longer term TODOs
+----
+* Documentation.
+* More tests.
+* Create a REST API.
