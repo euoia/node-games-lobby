@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Sat 22 Mar 2014 03:56:23 PM EDT
+// Last Modified:      Wed 02 Apr 2014 06:58:50 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -235,9 +235,10 @@ Gorillas.prototype.endRound = function (socket, session) {
   this.wins[this.otherPlayer()] += 1;
   if (this.enoughWins(this.otherPlayer())) {
     console.log("Player %d has enough wins, the match is over.", this.otherPlayer());
-    this.resultService.setWinner(this.players[this.otherPlayer()].username);
-    this.resultService.setLoser(this.players[this.currentPlayer()].username);
-    this.resultService.publishResult();
+    this.resultService.publishResult({
+      winner: this.players[this.otherPlayer()].username,
+      loser: this.players[this.currentPlayer()].username
+    });
 
     this.endOfMatch();
   } else {
