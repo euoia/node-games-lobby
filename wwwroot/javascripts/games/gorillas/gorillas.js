@@ -100,8 +100,6 @@ function Gorillas(options) {
 
   this.initScreen();
 
-  // If we had more images I would write a proper preloader.
-  // TODO: Make a preloader so that the banana is definitely loaded.
   imageLoader.done(function () {
     this.emit('ready');
 
