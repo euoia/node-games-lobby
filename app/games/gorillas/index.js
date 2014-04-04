@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Wed 02 Apr 2014 06:58:50 PM EDT
+// Last Modified:      Fri 04 Apr 2014 02:57:47 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -55,6 +55,14 @@ function Gorillas (resultService, usernames) {
 
   this.mapWidth = 80;
   this.mapHeight = 50;
+
+  // Milliseconds allowed per turn.
+  // If the player doesn't respond in this time then the next player has their
+  // turn.
+  this.turnTime = 20000;
+
+  // Save setTimeout references for turnTimer.
+  this.turnTimer = null;
 }
 
 Gorillas.prototype.getPlayerByUsername = function(username) {
@@ -271,7 +279,8 @@ Gorillas.prototype.start = function () {
     player.socket.emit('matchStarted', {
       playerIdx: player.playerIdx,
       usernames: [this.players[0].username, this.players[1].username],
-      returnURL: '/'
+      returnURL: '/',
+      turnTime: this.turnTime
     });
   }
 
@@ -295,13 +304,29 @@ Gorillas.prototype.enoughWins = function(playerIdx) {
 };
 
 Gorillas.prototype.nextTurn = function() {
+  this.clearMoveTimeout();
+
   if (this.turnNumber === null) {
     this.turnNumber = 1;
   }
 
   this.turnNumber += 1;
+
+  // Player has a limited amount of time to make their move.
+  this.turnTimer = setTimeout(this.turnTimeout.bind(this), this.turnTime);
 };
 
+Gorillas.prototype.clearMoveTimeout = function() {
+  if (this.turnTimer !== null) {
+    clearTimeout(this.turnTimer);
+  }
+};
+
+Gorillas.prototype.turnTimeout = function() {
+  console.log('Timeout for player %d', this.currentPlayer());
+  this.emitAll('turnTimeout');
+  this.nextTurn();
+};
 
 // --------------------------------------------------
 // Non-network methods.
@@ -374,7 +399,6 @@ Gorillas.prototype.nextRound = function() {
   this.nextTurn();
   console.log("It is player %d's turn", this.currentPlayer());
 };
-
 
 Gorillas.prototype.endOfMatch = function() {
   this.emitAll('matchEnded', {winner: this.otherPlayer()});

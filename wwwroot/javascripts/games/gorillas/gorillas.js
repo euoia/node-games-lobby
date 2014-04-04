@@ -2,6 +2,7 @@
 // When a gorilla is hit, it's a new round.
 // When a player has enough wins, that's the end of the match.
 //
+// TODO: Handle disconnect in case server crashes.
 function Gorillas(options) {
   // Size of a grid square in pixels.
   this.gravity = 40;
@@ -17,6 +18,9 @@ function Gorillas(options) {
   if (options.listener !== undefined) {
     this.listener = options.listener;
   }
+
+  // The time allowed for move. Will be sent in the matchStarted response.
+  this.turnTime = null;
 
   // 2-array of positions for player 0 and player 1 gorillas respectively.
   this.gorillaPositions = [];
@@ -91,8 +95,12 @@ function Gorillas(options) {
   this.sunImg = imageLoader.load('/img/games/gorillas/sun.png');
 
   // Mouse listeners need to be saved somewhere so we can remove them.
-  this.mousedownListener = null;
-  this.mouseupListener = null;
+  this.mouseDownListener = null;
+  this.mouseMoveListener = null;
+  this.mouseUpListener = null;
+
+  // The setInterval reference for the turn clock.
+  this.turnClockInterval = null;
 
   // The URL to return to after the game ends.
   // This ought to be sent by the server in the matchStarted event.
@@ -255,15 +263,13 @@ Gorillas.prototype.isBackgroundColour = function(imgData) {
 };
 
 Gorillas.prototype.canvasClicked = function(e) {
-  console.log("canvas clicked e", e);
-
   this.bananaContext.fillStyle = 'pink';
 
-  var point = {'x': e.layerX, 'y': e.layerY};
+  var startPoint = {'x': e.layerX, 'y': e.layerY};
 
   // Check if the current player's gorilla was clicked.
   var pointIsInsideBox = this.pointIsInsideBox(
-    point,
+    startPoint,
     this.gorillaPositions[this.currentPlayer()].x,
     this.gorillaPositions[this.currentPlayer()].y,
     this.gorillaImg.width,
@@ -271,34 +277,21 @@ Gorillas.prototype.canvasClicked = function(e) {
   );
 
   if (pointIsInsideBox === true) {
-    this.banana.removeEventListener('mousedown', this.mousedownListener);
-    this.mousedownListener = null;
+    this.clearListeners();
 
-    var moveListener = function(e) {
-        return this.mouseMoved(0, point, e);
-      }.bind(this);
+    // Moving the mouse draws a target line.
+    this.mouseMoveListener = this.mouseMoved.bind(this, startPoint);
+    this.banana.addEventListener('mousemove', this.mouseMoveListener);
 
-    this.banana.addEventListener('mousemove', moveListener);
-
-    // Unfortunately I think we need to store one listener on the gorillas
-    // object.
-    this.mouseupListener = function(e) {
-        this.banana.removeEventListener('mousemove', moveListener);
-        return this.mouseup(0, point, e);
-    }.bind(this);
-
-    this.banana.addEventListener('mouseup', this.mouseupListener);
+    // Releasing the mouse throws the banana.
+    this.mouseUpListener = this.mouseUp.bind(this, startPoint);
+    this.banana.addEventListener('mouseup', this.mouseUpListener);
   }
 };
 
 // Shows where the banana will be thrown.
-Gorillas.prototype.mouseMoved = function(
-  player,
-  startPoint,
-  e
-) {
-  // Clear the UI layer.
-  this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
+Gorillas.prototype.mouseMoved = function(startPoint, e) {
+  this.clearBananaLayer();
 
   this.bananaContext.beginPath();
   this.bananaContext.moveTo(startPoint.x, startPoint.y);
@@ -306,18 +299,27 @@ Gorillas.prototype.mouseMoved = function(
   this.bananaContext.stroke();
 };
 
-// Throws the banana.
-Gorillas.prototype.mouseup = function(
-  player,
-  startPoint,
-  e
-) {
-  // Remove the mouseup listener.
-   this.banana.removeEventListener('mouseup', this.mouseupListener);
-   this.mouseupListener = null;
+Gorillas.prototype.clearListeners = function() {
+  if (this.mouseDownListener !== null) {
+    this.banana.removeEventListener('mousedown', this.mouseDownListener);
+    this.mouseDownListener = null;
+  }
 
-  // Clear the UI layer.
-  this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
+  if (this.mouseMoveListener !== null) {
+    this.banana.removeEventListener('mousemove', this.mouseMoveListener);
+    this.mouseMoveListener = null;
+  }
+
+  if (this.mouseUpListener !== null) {
+    this.banana.removeEventListener('mouseup', this.mouseUpListener);
+    this.mouseUpListener = null;
+  }
+};
+
+// Throws the banana.
+Gorillas.prototype.mouseUp = function(startPoint, e) {
+  this.clearListeners();
+  this.clearBananaLayer();
 
   // Calculate the velocity from the mouse distance moved.
   var xVel = (e.layerX - startPoint.x) * 1.5;
@@ -481,10 +483,11 @@ Gorillas.prototype.nextTurn = function() {
   this.redrawUILayer();
 
   if (this.currentPlayer() === this.myPlayer) {
-    console.log("Adding mousedown listener");
-    this.mousedownListener = this.canvasClicked.bind(this);
-    this.banana.addEventListener('mousedown', this.mousedownListener);
+    this.mouseDownListener = this.canvasClicked.bind(this);
+    this.banana.addEventListener('mousedown', this.mouseDownListener);
   }
+
+  this.startTurnClock();
 };
 
 Gorillas.prototype.currentPlayer = function() {
@@ -496,13 +499,8 @@ Gorillas.prototype.otherPlayer = function() {
 };
 
 Gorillas.prototype.nextRound = function() {
-  // Remove any listeners.
-  this.banana.removeEventListener('mousedown', this.mousedownListener);
-  this.mousedownListener = null;
-  this.banana.removeEventListener('mouseup', this.mouseupListener);
-  this.mouseupListener = null;
-
-  this.bananaContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
+  this.clearListeners();
+  this.clearUILayer();
 
   this.turnNumber = null;
 
@@ -514,8 +512,24 @@ Gorillas.prototype.nextRound = function() {
   console.log("It is player %d's turn", this.currentPlayer());
 };
 
+Gorillas.prototype.clearBananaLayer = function() {
+  this.bananaContext.clearRect(
+    0,
+    0,
+    this.toPixels(this.mapWidth),
+    this.toPixels(this.mapHeight));
+};
+
+Gorillas.prototype.clearUILayer = function() {
+  this.uiContext.clearRect(
+    0,
+    0,
+    this.toPixels(this.mapWidth),
+    this.toPixels(this.mapHeight));
+};
+
 Gorillas.prototype.redrawUILayer = function() {
-  this.uiContext.clearRect(0, 0, this.toPixels(this.mapWidth), this.toPixels(this.mapHeight));
+  this.clearUILayer();
 
   // Draw the sun.
   this.uiContext.drawImage(this.sunImg, this.toPixels(this.mapWidth) / 2 - (this.sunImg.width / 2), 10);
@@ -599,12 +613,14 @@ Gorillas.prototype.matchStarted = function(eventData) {
   this.usernames = eventData.usernames;
   this.myPlayer = eventData.playerIdx;
   this.returnURL = eventData.returnURL;
+  this.turnTime = eventData.turnTime;
 
   console.log("Waiting to receive roundStarted from server");
   this.listener.on('roundStarted', this.roundStarted.bind(this));
   this.listener.on('bananaThrown', this.bananaThrown.bind(this));
   this.listener.on('roundEnded', this.roundEnded.bind(this));
   this.listener.on('matchEnded', this.matchEnded.bind(this));
+  this.listener.on('turnTimeout', this.turnTimeout.bind(this));
 };
 
 Gorillas.prototype.roundStarted = function(eventData) {
@@ -635,4 +651,44 @@ Gorillas.prototype.matchEnded = function(eventData) {
   $.when(this.animating).then( function() {
     this.endOfGame(eventData.winner);
   }.bind(this));
+};
+
+// The current player took too long to play their move.
+Gorillas.prototype.turnTimeout = function() {
+  // TODO: Flash message.
+  console.log('<= turnTimeout');
+  this.clearListeners();
+  this.clearBananaLayer();
+  this.nextTurn();
+};
+
+Gorillas.prototype.drawTurnClock = function(timeRemainingInSeconds) {
+  // Draw the text.
+  this.uiContext.fillStyle = "white";
+  this.uiContext.font = "16px monospace";
+
+  this.uiContext.textAlign = "center";
+  this.uiContext.fillText(timeRemainingInSeconds,
+    this.toPixels(this.mapWidth / 2),
+    this.toPixels(this.mapHeight / 8));
+};
+
+Gorillas.prototype.startTurnClock = function() {
+  this.stopTurnClock();
+
+  var startTime = Date.now();
+  var endTime = new Date(startTime + this.turnTime);
+
+  this.turnClockInterval = window.setInterval(function () {
+    var timeRemainingInSeconds = Math.floor((endTime - Date.now()) / 1000);
+
+    this.redrawUILayer();
+    this.drawTurnClock(timeRemainingInSeconds);
+  }.bind(this), 1000);
+};
+
+Gorillas.prototype.stopTurnClock = function() {
+  if (this.turnClockInterval !== null) {
+    window.clearInterval(this.turnClockInterval);
+  }
 };
