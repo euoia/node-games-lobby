@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMTccou
-// Last Modified:      Thu 13 Mar 2014 02:39:56 PM EDT
+// Last Modified:      Fri 04 Apr 2014 03:26:01 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -281,8 +281,6 @@ GamesLobby.prototype.listGames = function(socket, session, eventData) {
 
 // A socket has requested to create a match. The match will be created in a
 // WAITING state.
-// TODO: data.game should be data.gameID.
-// TODO: data is not a well named variable.
 GamesLobby.prototype.createMatch = function(socket, session, eventData) {
   console.log("[GamesLobby] <= createMatch [%s] [%s]", session.username, eventData.gameID);
 
