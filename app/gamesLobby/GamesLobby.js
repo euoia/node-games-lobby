@@ -1,5 +1,5 @@
 // Created:            Wed 30 Oct 2013 01:44:14 AM GMTccou
-// Last Modified:      Fri 04 Apr 2014 03:26:01 PM EDT
+// Last Modified:      Fri 04 Apr 2014 03:26:44 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -506,7 +506,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
 
   // Now join the match.
 
-  // Did any matches the player had started.
+  // Delete any matches the player had started.
   var didDeleteAMatch = false;
   this.matchManager.getMatchesByOwner(session.username).forEach(function (match) {
     console.log("[GamesLobby] Deleting match [%s]", match.id);
