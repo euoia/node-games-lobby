@@ -5,29 +5,13 @@ A matchmaking server and chat system for multiplayer online games.
 The games must have a NodeJS back-end that implements a small number of methods
 required by the server.
 
+A live demo is running at [http://multiplayergorillas.com](http://multiplayergorillas.com).
+
 Features
 ----
 * Chat across games with private messages, announcements, lobbies, public rooms.
 * Games must conform only to a simple documented API.
 * Example games (tictactoe and gorillas) provided.
-
-Requirements
-----
-* bower for installing client dependencies.
-* mocha for running the tests.
-* redis for storing user sessions, `redis-server` on Ubuntu.
-
-To use this
-----
-* Clone this repository.
-* Install bower globally, `npm install -g bower`.
-* Install required modules, `npm install`.
-* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/) `npm install -g mocha`).
-* Look at the example tictactoe and gorillas games.
-* Fork the repository.
-* Write your game to conform to the documented game API.
-* Run this program on a web server somewhere.
-* Get people into the lobby and playing games.
 
 Why would this be useful to you?
 ----
@@ -36,15 +20,31 @@ Why would this be useful to you?
 * You are happy for those games to conform to a simple API for the sake of the
   aforementioned conveniences.
 
-In the future maybe
+Requirements
 ----
-* Better naming conventions for the ecosystem, node-games-lobby and
-  node-command-center are indistinct.
-* Handle games with more than 2 players.
-* Player and game sharing with other lobbies.
-* Better account management features.
-* A webservice API for games and account handling.
-* Command center client could ask server for command list.
+* bower for installing client dependencies.
+* mocha for running the tests.
+* redis for storing user sessions, `redis-server` on Ubuntu.
+
+Getting Started
+----
+* Clone this repository.
+* Install bower globally, `npm install -g bower`.
+* Install required modules, `npm install`.
+* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/) `npm install -g mocha`).
+* Start the server `npm start` and access it from a web browser.
+* Look at the code for the example tictactoe and gorillas games.
+
+Future improvements
+----
+* Improved login and account management.
+* Games with more than 2 players.
+* Webservice API for games and account handling.
+
+Screenshots
+----
+![In the lobby](./screenshots/in-lobby.png)
+![In a game of gorillas](./screenshots/gorillas-in-game.png)
 
 License
 ----
