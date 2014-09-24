@@ -9,20 +9,20 @@
     "express": "3.5.0",
     "less-middleware": "0.1.15",
     "pluralize": "0.0.7",
-    "sanitizer": "~0.1.1",
+    "sanitizer": "0.1.1",
     "session.socket.io": "euoia/session.socket.io#b149a120",
     "socket.io": "0.9.16",
     "underscore": "1.6.0",
     "uuid": "1.4.1",
-    "bcryptjs": "~0.7.12",
-    "redis": "~0.10.1"
+    "bcryptjs": "0.7.12",
+    "redis": "0.10.1"
   },
   "devDependencies": {
     "mocha": "1.17.1",
-    "should": "~1.2.0",
+    "should": "1.2.0",
     "superagent": "0.17.0",
-    "socket.io-client": "0.9.16",
-    "unirest": "~0.1.8"
+    "socket.io-client": "euoia/socket.io-client#8221a070307e28eb6f38f8f02ee7be077c858ecd",
+    "unirest": "0.1.8"
   },
   "scripts": {
     "test": "cd test && mocha integration/server.js",
