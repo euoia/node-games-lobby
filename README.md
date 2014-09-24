@@ -5,6 +5,8 @@ A matchmaking server and chat system for multiplayer online games.
 The games must have a NodeJS back-end that implements a small number of methods
 required by the server.
 
+A live demo is running at [http://multiplayergorillas.com](http://multiplayergorillas.com).
+
 Features
 ----
 * Chat across games with private messages, announcements, lobbies, public rooms.
