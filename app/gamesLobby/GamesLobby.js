@@ -132,7 +132,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
 
     // Require the game object.
     // TODO: Game directory ought to be configurable.
-    var game = this.games[gameID] = require(util.format('../games/%s/index.js', gameID));
+    this.games[gameID] = require(util.format('../games/%s/index.js', gameID));
 
     // The URL is made up of /gameID/matchID/action.
     app.get('/' + gameID + '/*/*', this.gameRouteHandler.bind(this, gameID));
@@ -149,6 +149,9 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   // When a match ends in a result, it is published through this service as a
   // 'result' event.
   this.resultListener = new EventEmitter();
+}
+
+GamesLobby.prototype.start = function() {
   this.resultListener.on('result', function (eventData) {
     console.log('[GamesLobby] <= result [winners=%s] [losers=%s] [drawers=%s]',
       eventData.winners,
@@ -184,7 +187,7 @@ function GamesLobby (gameIDs, app, sessionSocketIO) {
   var match = this.matchManager.createMatch ('g', 'gorillas', this.games.gorillas, 'james');
   this.matchManager.addPlayerToMatch('bob', match);
   // --------------------------------------------------
-}
+};
 
 // ----------------------
 // Helper functions.
@@ -282,11 +285,11 @@ GamesLobby.prototype.listGames = function(socket, session, eventData) {
 // A socket has requested to create a match. The match will be created in a
 // WAITING state.
 GamesLobby.prototype.createMatch = function(socket, session, eventData) {
-  console.log("[GamesLobby] <= createMatch [%s] [%s]", session.username, eventData.gameID);
+  console.log('[GamesLobby] <= createMatch [%s] [%s]', session.username, eventData.gameID);
 
   // Check the game name is one of the available games.
   if (_.has(this.games, eventData.gameID) === false) {
-    console.log("[GamesLobby] createMatch [%s] fail: no such game %s", session.username, eventData.gameID);
+    console.log('[GamesLobby] createMatch [%s] fail: no such game %s', session.username, eventData.gameID);
     this.commandCenter.sendNotification(
       socket,
       util.format('No such game %s.', eventData.gameID),
@@ -296,7 +299,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
 
   // Check the player doesn't already have a match.
   if (this.matchManager.getMatchesByOwner(session.username).length > 0) {
-    console.log("[GamesLobby] createMatch [%s] fail: player may only have one match", session.username);
+    console.log('[GamesLobby] createMatch [%s] fail: player may only have one match', session.username);
     this.commandCenter.sendNotification(
       socket,
       util.format('You may only have one match at a time.'),
@@ -322,7 +325,7 @@ GamesLobby.prototype.createMatch = function(socket, session, eventData) {
       pluralize('player', playersNeeded)));
 
   this.sendRoomWaitingMatches(eventData.roomName);
-  console.log("[GamesLobby] createMatch [%s] [%s] success", session.username, eventData.gameID);
+  console.log('[GamesLobby] createMatch [%s] [%s] success', session.username, eventData.gameID);
 };
 
 
@@ -350,13 +353,13 @@ GamesLobby.prototype.listWaitingMatches = function(socket, session, eventData) {
 
   var isOrAre;
   if (waitingMatches.length === 1) {
-    isOrAre = "is";
+    isOrAre = 'is';
   } else {
-    isOrAre = "are";
+    isOrAre = 'are';
   }
 
   var msg = util.format(
-    "There %s %d %s : ",
+    'There %s %d %s : ',
     isOrAre,
     waitingMatches.length,
     pluralize('match', waitingMatches.length),
@@ -378,7 +381,7 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
 
   this.commandCenter.notifyUsername(
     username,
-    util.format("You joined %s's game of %s.",
+    util.format('You joined %s\'s game of %s.',
       match.owner,
       match.gameID));
 
@@ -397,8 +400,6 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
     // Do the countdown on the clients.
     var secondsRemaining = 5;
     var sendCountdown = function() {
-      var s;
-
       if (secondsRemaining === 0) {
         this.launchMatch(match);
       } else {
@@ -433,7 +434,7 @@ GamesLobby.prototype.addPlayerToMatch = function(username, match) {
 //
 // A socket has requested to join any WAITING game of a specific game ID.
 GamesLobby.prototype.joinGame = function(socket, session, eventData) {
-  console.log("[GameLobby] <= joinGame [%s] [%s]", session.username, eventData.gameID);
+  console.log('[GameLobby] <= joinGame [%s] [%s]', session.username, eventData.gameID);
 
   // Check the game exists.
   if (_.has(this.games, eventData.gameID) === false) {
@@ -462,7 +463,7 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
   this.commandCenter.sendRoomNotification(
     socket,
     eventData.roomName,
-    util.format("%s joined %s's %s game.",
+    util.format('%s joined %s\'s %s game.',
       session.username,
       match.owner,
       match.gameID)
@@ -474,7 +475,7 @@ GamesLobby.prototype.joinGame = function(socket, session, eventData) {
 //
 // A socket has requested to join a specific match.
 GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
-  console.log("[GamesLobby] <= joinMatch [%s] [%s]", session.username, eventData.matchID);
+  console.log('[GamesLobby] <= joinMatch [%s] [%s]', session.username, eventData.matchID);
 
   var match = this.matchManager.getMatch(eventData.matchID);
   if (match === undefined) {
@@ -509,7 +510,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   // Delete any matches the player had started.
   var didDeleteAMatch = false;
   this.matchManager.getMatchesByOwner(session.username).forEach(function (match) {
-    console.log("[GamesLobby] Deleting match [%s]", match.id);
+    console.log('[GamesLobby] Deleting match [%s]', match.id);
     didDeleteAMatch = true;
     this.matchManager.deleteMatch(match.id);
   }.bind(this));
@@ -526,7 +527,7 @@ GamesLobby.prototype.joinMatch = function(socket, session, eventData) {
   this.commandCenter.sendRoomNotification(
     socket,
     eventData.roomName,
-    util.format("%s joined %s's %s game.",
+    util.format('%s joined %s\'s %s game.',
       session.username,
       match.owner,
       match.gameID)
@@ -537,15 +538,15 @@ GamesLobby.prototype.sendRoomWaitingMatches = function(roomName) {
   // Sort WAITING matches based on creation date.
   var waitingMatches = this.matchManager.getWaitingMatches();
 
-  console.log("[GamesLobby] => sendRoomWaitingMatches [%s]", roomName);
+  console.log('[GamesLobby] => sendRoomWaitingMatches [%s]', roomName);
   this.commandCenter.roomEmit(roomName, 'roomMatchList', waitingMatches);
 };
 
 GamesLobby.prototype.getPlayerRecord = function(socket, session, eventData) {
-  console.log("[GamesLobby] <= getPlayerRecord [%s] [%s]", session.username, eventData.username);
+  console.log('[GamesLobby] <= getPlayerRecord [%s] [%s]', session.username, eventData.username);
 
   var playerRecord = util.format(
-    "%s has %d %s and %d %s.",
+    '%s has %d %s and %d %s.',
     eventData.username,
     this.resultStore.getWins(eventData.username),
     pluralize('win', this.resultStore.getWins(eventData.username)),

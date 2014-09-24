@@ -62,7 +62,7 @@ app.configure('production', function configureProduction(){
   console.log('Loaded production configuration.');
 });
 
-var sessionStore = new RedisStore;
+var sessionStore = new RedisStore();
 var cookieParser = express.cookieParser(sessionSecret);
 
 // More express application boilerplate...
@@ -126,7 +126,7 @@ app.configure('development', function() {
 
 // Start the express server.
 var server = http.createServer(app).listen(app.get('port'), function() {
-  console.log("node-socket-games listening on port " + app.get('port'));
+  console.log('node-socket-games listening on port ' + app.get('port'));
 });
 
 // Create the socket.io server.
@@ -154,7 +154,7 @@ var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, cookieParser);
 // The handle to the express application is required in order to bind game-specific routes.
 var GamesLobby = require('./gamesLobby/GamesLobby.js');
 var gamesLobby = new GamesLobby(games, app, sessionSocketIO);
-
+gamesLobby.start();
 
 // --------------------------------------------------
 // Assign routes.
