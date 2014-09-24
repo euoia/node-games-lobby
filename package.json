@@ -10,7 +10,7 @@
     "less-middleware": "0.1.15",
     "pluralize": "0.0.7",
     "sanitizer": "~0.1.1",
-    "session.socket.io": "0.1.6",
+    "session.socket.io": "euoia/session.socket.io#b149a120",
     "socket.io": "0.9.16",
     "underscore": "1.6.0",
     "uuid": "1.4.1",
