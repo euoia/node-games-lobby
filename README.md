@@ -15,14 +15,14 @@ Requirements
 ----
 * bower for installing client dependencies.
 * mocha for running the tests.
-* redis for sessions `redis-server` on Ubuntu.
+* redis for storing user sessions, `redis-server` on Ubuntu.
 
 To use this
 ----
 * Clone this repository.
-* Install bower globally, `npm install -g bower`
-* Install modules, `npm install`
-* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/)).
+* Install bower globally, `npm install -g bower`.
+* Install required modules, `npm install`.
+* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/) `npm install -g mocha`).
 * Look at the example tictactoe and gorillas games.
 * Fork the repository.
 * Write your game to conform to the documented game API.
