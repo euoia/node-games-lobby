@@ -19,10 +19,10 @@
 var serverPort = 4000;
 process.env.PORT = serverPort;
 
-var app = require('../../app/server.js'),
-  assert = require('assert'),
+require('../../app/server.js');
+
+var assert = require('assert'),
   superagent = require('superagent'),
-  should = require('should'),
   io = require('socket.io-client'),
   util = require('util'),
   redis = require('redis');
@@ -30,15 +30,20 @@ var app = require('../../app/server.js'),
 var redisClient = redis.createClient();
 
 // Make sure the usernames are available.
-
 describe('node-games-lobby:', function() {
 
   describe('Login:', function() {
     before(function(done) {
       redisClient.del('user:bob', function(err) {
-        if (err) throw err;
+        if (err) {
+          throw err;
+        }
+
         redisClient.del('user:james', function(err) {
-          if (err) throw err;
+          if (err) {
+            throw err;
+          }
+
           done();
         });
       });
@@ -51,12 +56,6 @@ describe('node-games-lobby:', function() {
     // We need 2 players for a match.
     var goodAccount2 = {
       username: 'james'
-    };
-
-    // We need a third authenticated user to test what happens when a
-    // non-player tries to load a match page.
-    var goodAccount3 = {
-      username: 'jeff'
     };
 
     var goodAgent1 = superagent.agent();
@@ -188,9 +187,6 @@ describe('node-games-lobby:', function() {
         });
 
         it('Emit joinGame, get notification event then launchMatch event', function(done) {
-          // launchMatch comes 5 seconds after game start.
-          // TODO: This should be configurable.
-          this.timeout(7000);
 
           socket2.once('notification', function notificationReceived(eventData) {
             assert(eventData.message, 'eventData must have message');
@@ -202,6 +198,10 @@ describe('node-games-lobby:', function() {
           });
 
 
+          console.log('Joining game - waiting 5 seconds for countdown.');
+          // launchMatch comes 5 seconds after game start.
+          // TODO: This should be configurable.
+          this.timeout(6000);
           socket2.emit('joinGame', {gameID: 'tictactoe'});
         });
       });
