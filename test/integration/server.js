@@ -1,5 +1,5 @@
 //  Created:            Wed 30 Oct 2013 06:08:06 PM GMT
-//  Last Modified:      Sat 22 Mar 2014 04:15:44 PM EDT
+//  Last Modified:      Wed 24 Sep 2014 02:20:04 AM UTC
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -18,9 +18,6 @@
 // Start the server on a test port.
 var serverPort = 4000;
 process.env.PORT = serverPort;
-
-// Use production settings to minimize logging.
-process.env.NODE_ENV = 'production';
 
 var app = require('../../app/server.js'),
   assert = require('assert'),

@@ -1,1 +1,1 @@
-../../components/jquery/jquery.js
+../../components/jquery/dist/jquery.js
