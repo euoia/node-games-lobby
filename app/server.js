@@ -1,5 +1,5 @@
 //  Created:            Tue 29 Oct 2013 09:50:16 PM GMT
-//  Last Modified:      Fri 14 Mar 2014 02:22:03 PM EDT EST EST EST EST EST EST EST EST EST EST EST EST EST EST
+//  Last Modified:      Wed 24 Sep 2014 02:25:06 AM UTC EST EST EST EST EST EST EST EST EST EST EST EST EST EST
 //  Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -41,7 +41,8 @@ var
 // Application configuration.
 
 // Session secret.
-var sessionSecret = "this is just the dev secret";
+var sessionSecret = 'this is just the dev secret';
+var productionConfig = '../config/production.json';
 
 // Configure which games are available.
 // All games must conform to the 'Game object documentation', see game_server/index.js.
@@ -55,8 +56,8 @@ var games = [
 // Express boilerplate.
 var app = express();
 
-app.configure('production', function(){
-  var config = require('../config/production.json');
+app.configure('production', function configureProduction(){
+  var config = require(productionConfig);
   sessionSecret = config.sessionSecret;
   console.log('Loaded production configuration.');
 });
@@ -65,7 +66,7 @@ var sessionStore = new RedisStore;
 var cookieParser = express.cookieParser(sessionSecret);
 
 // More express application boilerplate...
-app.configure(function() {
+app.configure(function configure() {
   // App global: System port number.
   app.set('port', process.env.PORT || 3000);
 
