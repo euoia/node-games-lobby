@@ -35,11 +35,12 @@ Getting Started
 * Start the server `npm start` and access it from a web browser.
 * Look at the code for the example tictactoe and gorillas games.
 
-Future improvements
+Future Improvements
 ----
 * Improved login and account management.
 * Games with more than 2 players.
 * Webservice API for games and account handling.
+* Pluggable matchmaking system.
 
 Screenshots
 ----
