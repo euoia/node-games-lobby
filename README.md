@@ -11,11 +11,18 @@ Features
 * Games must conform only to a simple documented API.
 * Example games (tictactoe and gorillas) provided.
 
+Requirements
+----
+* bower for installing client dependencies.
+* mocha for running the tests.
+* redis for sessions `redis-server` on Ubuntu.
+
 To use this
 ----
 * Clone this repository.
-* Run `npm install`
-* Run `npm test` requires [mocha](http://visionmedia.github.io/mocha/) installed globally.
+* Install bower globally, `npm install -g bower`
+* Install modules, `npm install`
+* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/)).
 * Look at the example tictactoe and gorillas games.
 * Fork the repository.
 * Write your game to conform to the documented game API.
