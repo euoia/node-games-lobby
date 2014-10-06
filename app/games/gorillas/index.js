@@ -1,5 +1,5 @@
 // Created:            Thu 31 Oct 2013 12:06:16 PM GMT
-// Last Modified:      Fri 04 Apr 2014 03:20:04 PM EDT
+// Last Modified:      Fri 04 Apr 2014 03:28:17 PM EDT
 // Author:             James Pickard <james.pickard@gmail.com>
 // --------------------------------------------------
 // Summary
@@ -200,6 +200,9 @@ Gorillas.prototype.ready = function (socket, session, eventData) {
       playersReady += 1;
     }
   }
+
+  // TODO: Start a connection timeout. If the other player doesn't join after
+  // 10 seconds - consider them a loser.
 
   if (playersReady === 2) {
     console.log("[Gorillas] <= connection [%s]: Both players are now ready",
