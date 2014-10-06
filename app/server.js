@@ -25,6 +25,7 @@
 // PORT      - If set, this port will be used. If not, the default port 3000
 //             will be used.
 // --------------------------------------------------
+'use strict';
 
 var
   http = require('http'),                          // Required for initialising express server.
@@ -115,7 +116,6 @@ app.configure(function configure() {
   app.use(express.static(path.join(__dirname, '../wwwroot')));
 
   app.use(app.router);
-
 });
 
 // Set development configuration.

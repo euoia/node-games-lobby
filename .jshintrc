@@ -24,7 +24,6 @@
   "latedef": true,
   "newcap": true,
   "noarg": true,
-  "nobsp": true,
   "nonew": true,
   "plusplus": true,
   // Not really possible to enforce quotmark, sometimes mixed is convenient.
