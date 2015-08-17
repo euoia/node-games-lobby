@@ -140,7 +140,7 @@ socketio.set('transports', [
   'jsonp-polling'
 ]);
 
-socketio.set('origins', 'localhost:*');
+socketio.set('log level', 2);
 
 var sessionSocketIO = new SessionSocketIO(socketio, sessionStore, configuredCookieParser);
 
