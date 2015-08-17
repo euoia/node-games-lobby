@@ -42,8 +42,7 @@ var
   session = require('express-session'),
   cookieParser = require('cookie-parser'),
   errorHandler = require('errorhandler'),
-  bodyParser = require('body-parser'),
-  cors = require('cors');
+  bodyParser = require('body-parser');
 
 // --------------------------------------------------
 // Application configuration.
@@ -91,9 +90,6 @@ app.use(favicon(__dirname + '/../wwwroot/img/favicon.ico'));
 app.use(morgan('combined'));
 
 app.use(bodyParser.urlencoded({extended: false}));
-
-// For socket.io cross-origin requests.
-app.use(cors());
 
 // Apparently [citation needed], "Sessions won't work unless you have these 3
 // in this order: cookieParser, session, router".
