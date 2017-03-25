@@ -31,7 +31,7 @@ Getting Started
 * Clone this repository.
 * Install bower globally, `npm install -g bower`.
 * Install required modules, `npm install`.
-* Run the tests, `npm test` (requires [mocha](http://visionmedia.github.io/mocha/) `npm install -g mocha`).
+* Run the tests, `npm test` (requires [mocha](http://mochajs.org/) `npm install -g mocha`).
 * Start the server `npm start` and access it from a web browser.
 * Look at the code for the example tictactoe and gorillas games.
 
